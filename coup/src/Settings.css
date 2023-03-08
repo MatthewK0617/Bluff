@@ -1,0 +1,48 @@
+.settings-wrapper {
+    /* background-color: black; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* background-color: blue; */
+
+}
+
+.settings-wrapper-2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background-color: blue; */
+
+}
+
+.counter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: blue; */
+    /* padding: 10%; */
+    margin: 1%;
+    flex-direction: column;
+}
+
+.inner-counter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: aqua; */
+    padding: 1%;
+
+}
+
+/* .count-btn {
+    padding-left: 10%;
+    padding-right: 10%;
+} */
+
+input[type=Submit] {
+    background-color: aqua;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+}
