@@ -7,6 +7,8 @@ import { io } from "socket.io-client";
 import Settings from './Settings';
 import LoadingPage from './LoadingPage';
 import ClientGame from './Game/ClientGame';
+import WaitingRoom from './Game/WaitingRoom';
+import JoinGame from './Game/JoinGame';
 
 
 function App() {
@@ -43,9 +45,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={ <LoadingPage /> } />
+        <Route path="/" element={<LoadingPage />} />
         <Route path="/settings" element={<Settings data={data} time={time} />} />
         <Route path="/game" element={<ClientGame />} /> {/* replace with a specific id */}
+        <Route path="/waiting" element={<WaitingRoom />} /> {/* replace with a specific id */}
+        <Route path="/joingame" element={<JoinGame />} /> 
+
+
       </Routes>
     </Router>
   );

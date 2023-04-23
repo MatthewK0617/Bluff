@@ -1,14 +1,19 @@
 import React from "react";
 import Axios from 'axios';
 import Settings from '../Settings';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
+
+import './ClientGame.css';
 
 export default function ClientGame({ }) {
     // to pass data from child to child have to use parent as intermediary
 
     return (
-        <div>
-
+        <div className="client-wrapper">
+            <div>
+                
+            </div>
+            <Link reloadDocument to='/Settings'> back </Link>
         </div>
     )
 }

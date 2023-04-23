@@ -3,7 +3,7 @@ import Axios from 'axios';
 
 
 export default function Ambassador({ data, setData }) {
-    // const [num, setNum] = React.useState(2);
+    const [num, setNum] = React.useState([]);
     const onDecrement = (e) => {
         if (data.num > 2) {
             const num2 = data.num - 1;
@@ -32,15 +32,50 @@ export default function Ambassador({ data, setData }) {
         updateData(data2);
     }
 
-    // const onSubmitHandler = (e) => {
-    //     e.preventDefault();
-    // }
+    const changeR1 = (e) => {
+        const newr1 = !data.r1;
+        const data2 = {
+            num: data.num,
+            r1: newr1,
+            r2: data.r2,
+            r3: data.r3,
+        };
+        setData(data2);
+
+        updateData(data2);
+    }
+
+    const changeR2 = (e) => {
+        const newr2 = !data.r2;
+        const data2 = {
+            num: data.num,
+            r1: data.r1,
+            r2: newr2,
+            r3: data.r3,
+        };
+        setData(data2);
+
+        updateData(data2);
+    }
+
+    const changeR3 = (e) => {
+        const newr3 = !data.r3;
+        const data2 = {
+            num: data.num,
+            r1: data.r1,
+            r2: data.r2,
+            r3: newr3,
+        };
+        setData(data2);
+
+        updateData(data2);
+    }
 
     const baseURL = "http://localhost:8000/"
     // https://axios-http.com/docs/post_example
     // move this to clientGame? cus should send once that component is rendered?
-    const updateData = (card) => { // has to be capital for some reason? 2.24.23
-        Axios.post(`${baseURL}api/post`, {
+    const updateData = (card) => {
+        Axios.post(`${baseURL}updateCardData`, {
             "id": "amb",
             num: card.num,
             r1: card.r1,
@@ -68,6 +103,12 @@ export default function Ambassador({ data, setData }) {
                 <div onClick={(_) => onIncrement()}>
                     +
                 </div>
+            </div>
+            <div className="card-rules">
+                {/* replace true and false with the statements */}
+                <text onClick={changeR1}>{data.r1 ? "true" : "false"}</text>
+                <text onClick={changeR2}>{data.r2 ? "true" : "false"}</text>
+                <text onClick={changeR3}>{data.r3 ? "true" : "false"}</text>
             </div>
         </div>
     )

@@ -35,6 +35,13 @@
 
 }
 
+.card-rules {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
 /* .count-btn {
     padding-left: 10%;
     padding-right: 10%;

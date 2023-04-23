@@ -13,88 +13,71 @@ import Axios from 'axios';
 
 
 export default function Settings({ data, time }) {
-    const [num, setNum] = React.useState(2);
 
     const [amb, setAmb] = React.useState({
+        id: 'amb',
         num: 4, // maybe grab from game_data to start with
         r1: true, // 6:30 - change the name for r1 r2 and r3
         r2: true, // 6:35 - keep the names for r1 r2 r3 for ease of access in tables
         r3: true
     }); // eventually turn into object
     const [ass, setAss] = React.useState({
+        id: 'ass',
         num: 4,
         r1: true, // change the name for r1 r2 and r3
         r2: true,
         r3: true
     });
     const [cap, setCap] = React.useState({
+        id: 'cap',
         num: 4,
         r1: true, // change the name for r1 r2 and r3
         r2: true,
         r3: true
     });
     const [con, setCon] = React.useState({
+        id: 'con',
         num: 4,
         r1: true, // change the name for r1 r2 and r3
         r2: true,
         r3: true
     });
     const [duk, setDuk] = React.useState({
+        id: 'duk',
         num: 4,
         r1: true, // change the name for r1 r2 and r3
         r2: true,
         r3: true // if it doesn't have three rules, should be able to remove it from obj and it'll just stay as null
     });
 
-    const onDecrement = (e) => { // send to server which will update backend
-        if (num > 2) {
-            let num2 = num - 1;
-            setNum(num2);
-        }
-    }
-
-    const onIncrement = (e) => {
-        let num2 = num + 1;
-        setNum(num2);
-    }
-
     const onSubmitHandler = (e) => {
         e.preventDefault();
-        updateData(duk);
+        // updateCardData(duk);
     }
 
     const baseURL = "http://localhost:8000/"
-    // https://axios-http.com/docs/post_example
-    // move this to clientGame? cus should send once that component is rendered?
-    const updateData = (card) => { // has to be capital for some reason? 2.24.23
-        Axios.post(`${baseURL}api/post`, card).then((res) => {
-            console.log(res);
-        }).catch((err) => {
-            console.log(err);
+
+    const onCreateGame = () => {
+        // create game
+        // generate random code
+        Axios.post(`${baseURL}createGame`, {
+            username: "user_input", // make user input for game creator
+            amb: amb,
+            ass: ass,
+            cap: cap,
+            con: con,
+            duk: duk,
+
         })
-        console.log("updated")
+            .then((res) => {
+                console.log(res);
+            }).catch((err) => {
+                console.log(err);
+            })
     }
-    // turn this into array so that I can read in all the cards on 1 submit
 
     return (
         <div className="settings-wrapper">
-            <div>
-                <div>Players</div>
-                <div>
-                    {data} {time}
-                </div>
-                <div>
-                    <div onClick={(_) => onDecrement()}>
-                        -
-                    </div>
-                    <div>
-                        {num}
-                    </div>
-                    <div onClick={(_) => onIncrement()}>
-                        +
-                    </div>
-                </div>
-            </div>
             <div className="settings-wrapper-2">
                 <div className="counter">
                     <Ambassador data={amb} setData={setAmb} />
@@ -119,7 +102,9 @@ export default function Settings({ data, time }) {
                 </form> */}
 
             </div>
-            <Link reloadDocument to='/game'> Create </Link>
+            <Link to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
+
+            <Link reloadDocument to='/'> Back </Link>
 
         </div>
     )
