@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import Axios from 'axios';
 
 import './Settings.css'
 
@@ -9,10 +10,9 @@ import Contessa from "./Cards/Contessa";
 import Duke from "./Cards/Duke";
 import { Link } from "react-router-dom";
 
-import Axios from 'axios';
 
 
-export default function Settings({ data, time }) {
+export default function Settings({ data, time, socket }) {
 
     const [amb, setAmb] = React.useState({
         id: 'amb',
@@ -109,8 +109,3 @@ export default function Settings({ data, time }) {
         </div>
     )
 }
-
-// link doesnt have event -> no prevent default? can wrap link in form if doesnt work
-
-// https://www.freecodecamp.org/news/axios-react-how-to-make-get-post-and-delete-api-requests/
-// https://stackoverflow.com/questions/74263218/api-is-working-fine-with-postman-but-not-working-in-react

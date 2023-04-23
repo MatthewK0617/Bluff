@@ -5,12 +5,12 @@ import { useHistory, Link } from 'react-router-dom';
 
 import './JoinGame.css';
 
-export default function JoinGame({ }) {
+export default function JoinGame({ socket }) {
     // to pass data from child to child have to use parent as intermediary
 
     let [ign, setIgn] = React.useState("");
     let [code, setCode] = React.useState("");
-    let [list, setList] = React.useState([]); // {name, id}
+    let [list, setList] = React.useState([]); 
     let [codes, setCodes] = React.useState([]);
     let [isGame, setIsGame] = React.useState(false);
 
@@ -69,13 +69,14 @@ export default function JoinGame({ }) {
 
             Axios.post(`${baseURL}addPlayers`, {
                 username: ign,
+                socket_id: socket.id,
                 code: code
             })
                 .then(res => {
                 })
                 .catch(e => {
+                    console.log(e);
                 })
-
             setIgn("");
             setCode("");
         }
@@ -94,7 +95,6 @@ export default function JoinGame({ }) {
     }
     let joinGame = () => {
         getGames();
-
         let len = list.length;
         for (let i = 0; i < codes.length; i++) {
             if (codes[i] === code) { // add player to the specific game instance
@@ -102,7 +102,10 @@ export default function JoinGame({ }) {
                 break;
             }
         }
-        if (isGame) addPlayer(len);
+        if (isGame) {
+            addPlayer(len);
+            socket.emit("joinedgame", "asdasd"); // this line
+        }
         else {
             setCode("");
             console.log("invalid code");

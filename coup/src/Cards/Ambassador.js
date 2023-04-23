@@ -106,9 +106,9 @@ export default function Ambassador({ data, setData }) {
             </div>
             <div className="card-rules">
                 {/* replace true and false with the statements */}
-                <text onClick={changeR1}>{data.r1 ? "true" : "false"}</text>
-                <text onClick={changeR2}>{data.r2 ? "true" : "false"}</text>
-                <text onClick={changeR3}>{data.r3 ? "true" : "false"}</text>
+                <div onClick={changeR1}>{data.r1 ? "true" : "false"}</div>
+                <div onClick={changeR2}>{data.r2 ? "true" : "false"}</div>
+                <div onClick={changeR3}>{data.r3 ? "true" : "false"}</div>
             </div>
         </div>
     )
