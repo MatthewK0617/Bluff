@@ -10,11 +10,11 @@ import ClientGame from './Game/ClientGame';
 import WaitingRoom from './Game/WaitingRoom';
 import JoinGame from './Game/JoinGame';
 
-const socket = io.connect("http://localhost:8000");
 
 function App() {
   const [data, setData] = React.useState(null);
   const [time, setTime] = React.useState('fetching');
+  let socket;
 
 
   React.useEffect(() => {
@@ -24,14 +24,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // const socket = io('http://127.0.0.1:8000'); 
-    // socket = io.connect("http://localhost:8000");
+    socket = io.connect("http://localhost:8000");
     socket.on("FromAPI", data => {
       setTime(data);
     });
     socket.on("connect", data => {
       setTime(data);
-      console.log('socket connected')
+      console.log('socket connected');
+      console.log(socket.id)
     })
     socket.on("reconnect_failed", () => {
       console.log(socket.disconnected)
@@ -40,19 +40,20 @@ function App() {
       socket.disconnect();
   }, [])
 
-  console.log(socket)
+  // console.log(socket);
 
 
   return (
     <Router>
       <Routes>
+        {/* <p>
+          <time dateTime={time}>{time}</time>
+        </p> */}
         <Route path="/" element={<LoadingPage />} />
         <Route path="/settings" element={<Settings data={data} time={time} />} />
-        <Route path="/game" element={<ClientGame />} /> {/* replace with a specific id */}
-        <Route path="/waiting" element={<WaitingRoom />} /> {/* replace with a specific id */}
+        <Route path="/game" element={<ClientGame />} />
+        <Route path="/waiting" element={<WaitingRoom />} />
         <Route path="/joingame" element={<JoinGame socket={socket} />} />
-
-
       </Routes>
     </Router>
   );

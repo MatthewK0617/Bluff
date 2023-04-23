@@ -104,7 +104,7 @@ export default function JoinGame({ socket }) {
         }
         if (isGame) {
             addPlayer(len);
-            socket.emit("joinedgame", "asdasd"); // this line
+            socket.emit("joingame", "asdasd"); // this line
         }
         else {
             setCode("");

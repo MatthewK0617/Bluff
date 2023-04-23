@@ -42,15 +42,15 @@ let socket_id;
 io.on("connection", (socket) => {
     socket_id = socket.id;
     console.log(socket.id, "connected");
+    console.log((Object.keys(io.sockets.sockets)).length);
     if (interval) {
         clearInterval(interval);
     }
     interval = setInterval(() => getApiAndEmit(socket), 1000);
-    socket.on("joinedgame", (data) => {
+    socket.on("joingame", (data) => {
         console.log("connected to game");
         // too many connecting in terminal logs
     })
-    socket.on()
     socket.on("disconnect", () => {
         if (cd_current != "" && gd_current != "") {
             sql_db.handleDisconnect(cd_current, gd_current, socket_id);
@@ -103,4 +103,3 @@ const getApiAndEmit = socket => {
 http.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
-
