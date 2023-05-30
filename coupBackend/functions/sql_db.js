@@ -1,19 +1,38 @@
 // maybe make error handler function
 const db = require('../config/db');
 
-let handleDisconnect = (games, cd_current, gd_current, socket_id) => { 
+let handleDisconnect = (games, gd_current, cd_current, socket_id) => { 
     let length = 0;
-    let in_db = false;
-    // if (!in_db) // if its not in the database, then return
-    // // have to search? or is there a way 
-    //     return;
+
+    // find table associated with socket_id
+    // -> this is the same thing as searching for the socket
+    // if theres no table, it doesn't exist
+    // otherwise, continue and delete
+
+    /**
+     * SOLUTIONS FOR LINE 1
+     * 1) 
+     * a. O((N+M)/N)
+     * process: create a hash table with key value and store so search is easy (look at B-Tree indexing)
+     * problem: collisions; chaining is impossible? how to create efficient linked-list
+     * 
+     * b. O(N)
+     * process: do not hash and just keep a table full of participants and add a new column 
+     * that includes game
+     * problem: expensive
+     * 
+     * 2) O(N)
+     * process: search through all the tables (1 per game)
+     * problem: expensive; more tables is not good either
+     */
+
     console.log(`deleting ${cd_current}`);
-    db.query(`DELETE FROM ${cd_current} WHERE socket_id=${socket_id}`, (err, res) => {
+    db.query(`DELETE FROM ${gd_current} WHERE socket_id=${socket_id}`, (err, res) => {
         if (err) {
             console.log(err);
         }
     })
-    db.query(`SELECT COUNT(*) FROM ${cd_current}`, (err, res) => {
+    db.query(`SELECT COUNT(*) FROM ${gd_current}`, (err, res) => {
         if (err) {
             console.error(err);
         } else {
@@ -22,12 +41,12 @@ let handleDisconnect = (games, cd_current, gd_current, socket_id) => {
         }
     })
     if (length == 0) {
-        db.query(`DROP TABLE ${cd_current}`, (err, res) => {
+        db.query(`DROP TABLE ${gd_current}`, (err, res) => {
             if (err) {
                 console.log(err);
             }
         });
-        db.query(`DROP TABLE ${gd_current}`, (err, res) => {
+        db.query(`DROP TABLE ${cd_current}`, (err, res) => {
             if (err) {
                 console.log(err);
             }

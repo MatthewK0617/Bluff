@@ -1,21 +1,23 @@
 const db = require('../config/db');
 
-let createGame = (app, games, game_data, card_data, socket_id, req) => {
+let createGame = (app, games, socket_id, req) => {
     console.log("id in createGame: " + socket_id);
 
     // check if it exists and if not let it be a valid code
     // let code = Math.floor(100000 + Math.random() * 900000) 
+    let code = Math.floor(100 + Math.random() * 999); // should be above
+
     let username = req.body.username;
     let new_cards = [
         req.body.amb, req.body.ass, req.body.cap, req.body.con, req.body.duk
     ]
 
-    gd_current = game_data;
-    cd_current = card_data;
+    let game_data = "gd" + code;
+    let card_data = "cd" + code;
 
-    
-    games.push(game_data.substring(2));
-    console.log(games)
+
+    games.push(code);
+    console.log(games);
 
     console.log(game_data);
     db.query(`CREATE TABLE ${game_data} ( name varchar(20), id int NOT NULL UNIQUE, socket_id varchar(40))`, (err, result) => {

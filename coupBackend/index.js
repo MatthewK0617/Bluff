@@ -17,18 +17,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-let gd_current = "";
-let cd_current = ""; // fixing this is priority #1
-// THESE ARE UPDATING FOR THE ENTIRE SERVER, NOT EACH INDIVIDUAL CLIENT. 
-
-// error is happening because these have values from previous clients and 
-// are staying filled. 
-
-// best practice would be to have one per client and send that info from 
-// the client to the server each time a client disconnects 
-// the value would only update CLIENT-SIDE
-// solution: info is table name
-
 const io = require('socket.io')(http, {
     cors: {
         origin: "http://localhost:3000"
@@ -38,15 +26,7 @@ const io = require('socket.io')(http, {
 let interval;
 let socket_id;
 
-let code = Math.floor(100 + Math.random() * 999); // should be above
-
-let game_data = "gd" + code;
-let card_data = "cd" + code;
-
-gd_current = game_data; // same thing as above, just use one
-cd_current = card_data;
-
-let games = []
+let games = [];
 
 io.on("connection", (socket) => {
     socket_id = socket.id;
@@ -60,8 +40,8 @@ io.on("connection", (socket) => {
         console.log("connected to game");
     })
     socket.on("disconnect", () => {
-        sql_db.handleDisconnect(games, cd_current, gd_current, socket_id);
-        console.log(cd_current);
+        sql_db.handleDisconnect(games, socket_id);
+        // console.log(cd_current);
         console.log(`Client ${socket_id} disconnected`);
         clearInterval(interval);
     });
@@ -108,7 +88,8 @@ app.post(`/updateCardData`, (req, res) => {
  * creates game
  */
 app.post('/createGame', (req, res) => {
-    create_game.createGame(app, games, game_data, card_data, socket_id, req); // getting called instantly? not waiting for call from front-end
+    create_game.createGame(app, games, socket_id, req);
+    // update server instance of game_data every create_game and leave_game. 
 });
 
 const getApiAndEmit = socket => {
