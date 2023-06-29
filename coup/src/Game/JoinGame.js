@@ -6,11 +6,12 @@ import { useHistory, Link } from 'react-router-dom';
 import './JoinGame.css';
 
 export default function JoinGame({ socket }) {
+    // console.log(socket);
     // to pass data from child to child have to use parent as intermediary
 
     let [ign, setIgn] = React.useState("");
     let [code, setCode] = React.useState("");
-    let [list, setList] = React.useState([]); 
+    let [list, setList] = React.useState([]);
     let [codes, setCodes] = React.useState([]);
     let [isGame, setIsGame] = React.useState(false);
 
@@ -27,8 +28,8 @@ export default function JoinGame({ socket }) {
     };
 
     let onSubmit = (event) => {
-        joinGame();
         event.preventDefault();
+        joinGame();
     }
 
     // should be every time the db updates. currently everytime you want to add player
@@ -56,8 +57,9 @@ export default function JoinGame({ socket }) {
     }
 
     let addPlayer = (len) => {
+        console.log("here");
         getPlayers();
-        if (ign !== "") {
+        if (ign !== "") { // 6.7.23 fix this so that it applies to only within game
             for (let i = 0; i < len; i++) {
                 if (ign === list[i]) {
                     console.log("username is already taken")
@@ -73,6 +75,7 @@ export default function JoinGame({ socket }) {
                 code: code
             })
                 .then(res => {
+                    console.log(res);
                 })
                 .catch(e => {
                     console.log(e);
@@ -87,16 +90,17 @@ export default function JoinGame({ socket }) {
             .then(res => {
                 let list2 = [];
                 for (let i = 0; i < res.data.length; i++) {
-                    list2.push(res.data[i].Tables_in_card_game)
+                    list2.push(res.data[i].code)
                 }
                 setCodes(list2);
                 console.log(codes);
             })
     }
-    let joinGame = () => {
+    let joinGame = () => { // takes a while to join
         getGames();
         let len = list.length;
         for (let i = 0; i < codes.length; i++) {
+            console.log(codes[i]);
             if (codes[i] === code) { // add player to the specific game instance
                 setIsGame(true);
                 break;
@@ -104,10 +108,11 @@ export default function JoinGame({ socket }) {
         }
         if (isGame) {
             addPlayer(len);
-            socket.emit("joingame", "asdasd"); // this line
+            // socket.emit("joingame", "asdasd"); // this line
         }
         else {
             setCode("");
+            console.log(codes);
             console.log("invalid code");
         }
     }

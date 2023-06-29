@@ -10,11 +10,12 @@ import ClientGame from './Game/ClientGame';
 import WaitingRoom from './Game/WaitingRoom';
 import JoinGame from './Game/JoinGame';
 
-
 function App() {
+
   const [data, setData] = React.useState(null);
   const [time, setTime] = React.useState('fetching');
-  let socket;
+  const [socket, setSocket] = React.useState(null);
+  const [code, setCode] = React.useState(""); 
 
 
   React.useEffect(() => {
@@ -24,23 +25,27 @@ function App() {
   }, []);
 
   useEffect(() => {
-    socket = io.connect("http://localhost:8000");
-    socket.on("FromAPI", data => {
+    const socket1 = io.connect("http://localhost:8000");
+    setSocket(socket1);
+
+    socket1.on("FromAPI", data => {
       setTime(data);
     });
-    socket.on("connect", data => {
+    socket1.on("connect", data => {
       setTime(data);
       console.log('socket connected');
-      console.log(socket.id)
+      console.log(socket1.id)
     })
-    socket.on("reconnect_failed", () => {
-      console.log(socket.disconnected)
+    socket1.on("reconnect_failed", () => {
+      console.log(socket1.disconnected)
     });
     return () =>
-      socket.disconnect();
+      socket1.disconnect();
   }, [])
 
-  // console.log(socket);
+  React.useEffect(() => {
+    console.log(code);
+  }, [code])
 
 
   return (
@@ -50,9 +55,9 @@ function App() {
           <time dateTime={time}>{time}</time>
         </p> */}
         <Route path="/" element={<LoadingPage />} />
-        <Route path="/settings" element={<Settings data={data} time={time} />} />
-        <Route path="/game" element={<ClientGame />} />
-        <Route path="/waiting" element={<WaitingRoom />} />
+        <Route path="/settings" element={<Settings data={data} time={time} socket={socket} code={code} setCode={setCode} />} />
+        <Route path="/game" element={<ClientGame code={code} />} />
+        <Route path="/waiting" element={<WaitingRoom code={code} />} />
         <Route path="/joingame" element={<JoinGame socket={socket} />} />
       </Routes>
     </Router>

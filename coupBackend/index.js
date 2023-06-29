@@ -1,12 +1,13 @@
 /* imports */
 const sql_db = require('./functions/sql_db.js');
-const create_game = require('./functions/create_game.js')
-const connections_ = require('./functions/connections.js')
+const create_game = require('./functions/create_game.js');
+const connections_ = require('./functions/connections.js');
+const clear = require('./functions/clear_games.js');
 
 const express = require("express");
 const app = express();
 
-const db = require('./config/db')
+const db = require('./config/db');
 
 const PORT = process.env.PORT || 8000;
 
@@ -26,9 +27,7 @@ const io = require('socket.io')(http, {
 let interval;
 let socket_id;
 
-let games = [];
-
-io.on("connection", (socket) => {
+io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error messages
     socket_id = socket.id;
     console.log(socket.id, "connected");
     console.log((Object.keys(io.sockets.sockets)).length);
@@ -39,10 +38,13 @@ io.on("connection", (socket) => {
     socket.on("joingame", (data) => {
         console.log("connected to game");
     })
-    socket.on("disconnect", () => {
-        sql_db.handleDisconnect(games, socket_id);
+    socket.on("disconnect", () => { 
+        sql_db.handleDisconnect(socket.id);
+        setTimeout(() => {
+
+        }, 1000);
         // console.log(cd_current);
-        console.log(`Client ${socket_id} disconnected`);
+        console.log(`Client ${socket.id} disconnected`);
         clearInterval(interval);
     });
 });
@@ -52,6 +54,10 @@ io.on("connection", (socket) => {
  */
 app.get("/", (req, res) => {
     connections_.checkConnection(app, res);
+});
+
+app.get("/clear", (req, res) => {
+    clear.handleClear();
 });
 
 /**
@@ -69,13 +75,16 @@ app.get(`/getPlayers`, (req, res) => {
     sql_db.getPlayers(app, req, res);
 });
 
+app.post(`/getPlayerGame`, (req, res) => {
+    sql_db.getPlayerGame(req, res);
+})
+
 /**
  * handles adding players to a game
  */
 app.post("/addPlayers", (req, res) => {
     sql_db.addPlayers(app, req);
 });
-
 
 /**
  * update card info
@@ -88,8 +97,7 @@ app.post(`/updateCardData`, (req, res) => {
  * creates game
  */
 app.post('/createGame', (req, res) => {
-    create_game.createGame(app, games, socket_id, req);
-    // update server instance of game_data every create_game and leave_game. 
+    create_game.createGame(app, req);
 });
 
 const getApiAndEmit = socket => {
