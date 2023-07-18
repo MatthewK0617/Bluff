@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export default function () {
+export default function LoadingPage() {
+    React.useEffect(() => {
+        window.sessionStorage.clear();
+    }, [])
+
     return (
         <div>
             <div>

@@ -1,155 +1,156 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Axios from 'axios';
-import Settings from '../Settings';
-import { useHistory, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import './JoinGame.css';
 
-export default function JoinGame({ socket }) {
-    // console.log(socket);
-    // to pass data from child to child have to use parent as intermediary
+export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, setOpps, socket }) {
+    const formRef = useRef(null);
 
-    let [ign, setIgn] = React.useState("");
-    let [code, setCode] = React.useState("");
-    let [list, setList] = React.useState([]);
-    let [codes, setCodes] = React.useState([]);
-    let [isGame, setIsGame] = React.useState(false);
+    const [ign, setIgn] = useState("");
+    const [code, setCode] = useState("");
+    const [list, setList] = useState([]);
+    const [added, setAdded] = useState(false);
 
-    const baseURL = "http://localhost:8000/"
+    const baseURL = "http://localhost:8000/";
 
-    let onChangeCode = (event) => {
-        code = event.target.value;
+    useEffect(() => {
+        getGames();
+    }, []);
+
+    const onChangeCode = (event) => {
+        const code = event.target.value;
         setCode(code);
     };
 
-    let onChangeIgn = (event) => {
-        ign = event.target.value;
+    const onChangeIgn = (event) => {
+        const ign = event.target.value;
         setIgn(ign);
     };
 
-    let onSubmit = (event) => {
+    const onSubmit = async (event) => { // when browser closed, delete player
         event.preventDefault();
-        joinGame();
-    }
+        await getPlayers();
+        await joinGame(); 
+    };
 
-    // should be every time the db updates. currently everytime you want to add player
-    let getPlayers = () => {
-        Axios.get(`${baseURL}getPlayers`, {
-            params: {
-                code: code
-            }
-        })
-            .then(res => {
-                let list2 = [];
-                for (let i = 0; i < res.data.length; i++) {
-                    list2.push({
-                        name: res.data[i].name,
-                        id: res.data[i].id,
-                    })
+    useEffect(() => {
+        if (added) {
+            setTimeout(() => {
+                window.location.href = '/waiting';
+            }, 1000);
+        }
+    }, [added]);
+
+    const getPlayers = async () => {
+        try {
+            const res = await Axios.get(`${baseURL}getPlayers`, {
+                params: {
+                    code: code,
                 }
-                list = [...list2];
-                setList(list);
-                // console.log(list);
-            })
-            .catch(e => {
-                console.log(e);
-            })
-    }
+            }, {
+                timeout: 5000,
+            });
+            const players = res.data.map((player) => ({
+                name: player.name,
+                id: player.id,
+            }));
+            setList(players);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-    let addPlayer = (len) => {
-        console.log("here");
-        getPlayers();
-        if (ign !== "") { // 6.7.23 fix this so that it applies to only within game
-            for (let i = 0; i < len; i++) {
-                if (ign === list[i]) {
-                    console.log("username is already taken")
-                    return;
-                }
-            }
-            list = [...list, ign];
-            setList(list);
-
-            Axios.post(`${baseURL}addPlayers`, {
+    const addPlayer = async () => {
+        try {
+            const res = await Axios.post(`${baseURL}addPlayers`, {
                 username: ign,
                 socket_id: socket.id,
-                code: code
-            })
-                .then(res => {
-                    console.log(res);
-                })
-                .catch(e => {
-                    console.log(e);
-                })
-            setIgn("");
-            setCode("");
+                code: code,
+            },
+                {
+                    timeout: 1000,
+                });
+            return res.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
         }
-    } // when a new game is created, create a new table named the code, and then add the players to that table
+    };
 
-    let getGames = () => {
-        Axios.get(`${baseURL}getGames`) // should also use useeffect to get it initially
-            .then(res => {
-                let list2 = [];
-                for (let i = 0; i < res.data.length; i++) {
-                    list2.push(res.data[i].code)
+    const getGames = async () => {
+        try {
+            const res = await Axios.get(`${baseURL}getGames`);
+            const gameCodes = res.data.map((game) => game.code);
+            return gameCodes;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const joinGame = async () => {
+        try {
+            const getGamesRes = await getGames();
+            const isValidCode = getGamesRes.includes(code);
+            console.log(list);
+            const isValidIgn = list.every(player => player.name !== ign);
+
+            if (isValidCode) {
+                if (isValidIgn) {
+                    setAdded(true);
+                    setCodeFinal(code);
+                    await addPlayer();
+
+                    const getPlayerDataRes = await Axios.get(`${baseURL}getInitialPlayerData`, {
+                        params: {
+                            socket_id: socket.id
+                        }
+                    });
+                    let id2 = getPlayerDataRes.data.id;
+                    setId(id2);
+                    socket.emit("joingame", code, id, (response) => {
+                        const names = response.players.map(player => player.name);
+                        setOpps(names);
+                    });
+                } else {
+                    console.log("Invalid ign");
+                    // make it tell user 
                 }
-                setCodes(list2);
-                console.log(codes);
-            })
-    }
-    let joinGame = () => { // takes a while to join
-        getGames();
-        let len = list.length;
-        for (let i = 0; i < codes.length; i++) {
-            console.log(codes[i]);
-            if (codes[i] === code) { // add player to the specific game instance
-                setIsGame(true);
-                break;
+            } else {
+                setCode("");
+                console.log("Invalid code");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    useEffect(() => {
+        if (codeFinal && id) {
+            try {
+                window.sessionStorage.setItem('code', JSON.stringify(codeFinal));
+                window.sessionStorage.setItem('id', id);
+                window.sessionStorage.setItem('opps', JSON.stringify(opps));
+            } catch (error) {
+                console.error('Error stringifying code:', error);
             }
         }
-        if (isGame) {
-            addPlayer(len);
-            // socket.emit("joingame", "asdasd"); // this line
-        }
-        else {
-            setCode("");
-            console.log(codes);
-            console.log("invalid code");
-        }
-    }
-
-    React.useEffect(() => {
-        getGames();
-    }, [])
+    }, [codeFinal, id, opps]);
 
     return (
         <div className="join-wrapper">
             <div>
                 <form
-                    onSubmit={(event) => onSubmit(event)}
+                    ref={formRef}
+                    onSubmit={onSubmit}
                     className="form border border-primary"
                 >
                     <input value={ign} onChange={onChangeIgn} placeholder="username" />
                     <input value={code} onChange={onChangeCode} placeholder="code" />
-
-
-                    <button type="submit">Submit</button>
+                    <button type="submit" hidden>Submit</button>
                 </form>
-
-                {list.map((v, i) => (
-                    <div className="todo-element" key={i}>
-                        {v.name}
-                        {/* <div className="delete-button" onClick={() => onRemove(i)}>
-                            <RemoveCircleOutline color={"#00000"} height="20px" width="20px" />
-                        </div> */}
-                    </div>
-                ))}
             </div>
-            <Link reloadDocument to='/Settings'> Back </Link>
+            <Link reloadDocument to='/'> Back </Link>
         </div>
-    )
+    );
 }
-
-
-// enter code to join
-// pick username
-// add to player list

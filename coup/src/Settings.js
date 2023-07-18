@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Axios from 'axios';
 
 import './Settings.css'
@@ -6,7 +6,9 @@ import './Settings.css'
 import Cards from "./Cards/Cards";
 import { Link } from "react-router-dom";
 
-export default function Settings({ data, time, socket, code, setCode }) {
+export default function Settings({ socket, code, setCode, id, setId, setOpps }) {
+    // change this to pull from template
+    const baseURL = "http://localhost:8000/"
     const [cards, setCards] = React.useState([
         {
             id: 'amb',
@@ -45,34 +47,47 @@ export default function Settings({ data, time, socket, code, setCode }) {
         }
     ]);
 
-    const baseURL = "http://localhost:8000/"
-
-    const onCreateGame = () => {
-        Axios.post(`${baseURL}createGame`, {
-            id: socket.id, // **** fix variable names ****
+    const onCreateGame = async () => {
+        await Axios.post(`${baseURL}createGame`, {
+            socket_id: socket.id, // **** fix variable names ****
             username: "user_input", // make user input for game creator
             amb: cards[0],
             ass: cards[1],
             cap: cards[2],
             con: cards[3],
             duk: cards[4],
+        }).catch((err) => {
+            console.log(err);
         })
-            .then((res) => {
-                console.log(res);
-            }).catch((err) => {
-                console.log(err);
-            })
 
-        Axios.post(`${baseURL}getPlayerGame`, {
-            socket_id: socket.id,
+        const game_creator = await Axios.get(`${baseURL}getInitialPlayerData`, {
+            params: {
+                socket_id: socket.id,
+            }
         })
-            .then((res) => {
-                setCode(res.data[0].game_code);
+        const retrieved_code = game_creator.data.game_code;
+        const game_creator_id = game_creator.data.id;
 
-            }).catch((err) => {
-                console.log(err);
-            })
+        socket.emit("joingame", retrieved_code, game_creator_id, (response) => {
+            const names = response.players.map(player => player.name);
+            setOpps(names);
+        });
+
+        setCode(retrieved_code);
+        setId(game_creator_id);
     }
+
+    useEffect(() => {
+        setTimeout(() => {
+            try {
+                window.sessionStorage.setItem('code', JSON.stringify(code));
+                window.sessionStorage.setItem('id', id);
+            } catch (error) {
+                console.error('Error stringifying code:', error);
+            }
+        }, 100);
+
+    }, [code, id]);
 
     return (
         <div className="settings-wrapper">

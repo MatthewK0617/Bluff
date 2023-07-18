@@ -23,6 +23,8 @@ const io = require('socket.io')(http, {
         origin: "http://localhost:3000"
     }
 });
+const games = io.of('/games');
+
 
 let interval;
 let socket_id;
@@ -35,15 +37,28 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
         clearInterval(interval);
     }
     interval = setInterval(() => getApiAndEmit(socket), 1000);
-    socket.on("joingame", (data) => {
-        console.log("connected to game");
-    })
-    socket.on("disconnect", () => { 
-        sql_db.handleDisconnect(socket.id);
-        setTimeout(() => {
+    socket.on("joingame", (arg1, arg2, callback) => {
+        console.log("connected to game. fetching other players");
+        socket.join(arg1);
+        socket.emit("getplayers");
+        sql_db.getPlayersSocket(arg1, arg2, (error, players) => {
+            if (error) {
+                console.error(error);
+                callback(error, null);
+            } else {
+                console.log(players);
+                callback({ players: players }, null);
+            }
+        });
+        socket.join(arg2);
+    });
 
-        }, 1000);
-        // console.log(cd_current);
+    socket.on('roomEvent', (message, callback) => {
+        console.log(message);
+        callback("res");
+    })
+
+    socket.on("disconnect", () => {
         console.log(`Client ${socket.id} disconnected`);
         clearInterval(interval);
     });
@@ -65,25 +80,32 @@ app.get("/clear", (req, res) => {
  * TODO: think about differentiating between open and closed games
  */
 app.get("/getGames", (req, res) => {
-    sql_db.getGames(app, res);
+    sql_db.getGames(req, res);
 });
 
 /**
  * get players in a specific game instance
  */
 app.get(`/getPlayers`, (req, res) => {
-    sql_db.getPlayers(app, req, res);
+    sql_db.getPlayers(req, res);
 });
 
-app.post(`/getPlayerGame`, (req, res) => {
-    sql_db.getPlayerGame(req, res);
+/**
+ * gets the game and id of a player
+ */
+app.get(`/getInitialPlayerData`, (req, res) => {
+    sql_db.getInitialPlayerData(req, res);
+})
+
+app.post('/getPlayerData', (req, res) => {
+    sql_db.getPlayerData(req, res);
 })
 
 /**
  * handles adding players to a game
  */
 app.post("/addPlayers", (req, res) => {
-    sql_db.addPlayers(app, req);
+    sql_db.addPlayers(app, req, res);
 });
 
 /**
@@ -97,8 +119,12 @@ app.post(`/updateCardData`, (req, res) => {
  * creates game
  */
 app.post('/createGame', (req, res) => {
-    create_game.createGame(app, req);
+    create_game.createGame(io, req, res);
 });
+
+app.post("/leaveGame", (req, res) => {
+    sql_db.leaveGame(req, res);
+})
 
 const getApiAndEmit = socket => {
     const response = new Date();
