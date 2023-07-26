@@ -6,13 +6,12 @@ import './JoinGame.css';
 
 export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, setOpps, socket }) {
     const formRef = useRef(null);
+    const baseURL = "http://localhost:8000/";
+    let list = [];
 
     const [ign, setIgn] = useState("");
     const [code, setCode] = useState("");
-    const [list, setList] = useState([]);
     const [added, setAdded] = useState(false);
-
-    const baseURL = "http://localhost:8000/";
 
     useEffect(() => {
         getGames();
@@ -31,6 +30,7 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
     const onSubmit = async (event) => { // when browser closed, delete player
         event.preventDefault();
         await getPlayers();
+        console.log("onSubmit");
         await joinGame(); 
     };
 
@@ -55,7 +55,7 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
                 name: player.name,
                 id: player.id,
             }));
-            setList(players);
+            list = players;
         } catch (error) {
             console.log(error);
         }
@@ -108,7 +108,7 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
                     });
                     let id2 = getPlayerDataRes.data.id;
                     setId(id2);
-                    socket.emit("joingame", code, id, (response) => {
+                    socket.emit("joinGameWaiting", code, id2, (response) => {
                         const names = response.players.map(player => player.name);
                         setOpps(names);
                     });

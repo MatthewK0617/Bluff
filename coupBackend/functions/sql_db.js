@@ -101,6 +101,7 @@ function getGames(req, res) {
 }
 
 function getPlayersSocket(code, id, callback) {
+    console.log(code);
     db.query(`SELECT * FROM current_players WHERE game_code='${code}'`, (err, res) => {
         if (err) {
             console.error(err);
@@ -204,16 +205,6 @@ function addPlayers(app, req, res) {
                 }
             });
             // console.log(res);
-        }
-    })
-
-    // find the best place to put this
-    db.query(`SELECT * FROM current_players ORDER BY socket_id`, (err, result) => {
-        if (err) {
-            console.log(err);
-        }
-        else {
-            // console.log(result);
         }
     })
 }

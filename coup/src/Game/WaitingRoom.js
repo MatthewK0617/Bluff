@@ -22,18 +22,18 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
                 .catch((error) => {
                     // Handle error if needed
                 });
-        }, 5000);
+        }, 2500);
 
         return () => {
             clearInterval(interval);
         };
     }, [code, setOpps]);
 
-
-    React.useEffect(() => {
+    useEffect(() => {
         const data1 = window.sessionStorage.getItem('code');
         const data2 = window.sessionStorage.getItem('id');
         const data3 = window.sessionStorage.getItem('opps');
+        // const data4 = window.sessionStorage.getItem('socketRoomPath');
 
         if (data1 !== null && data2 !== null && data3 !== null) {
             try {
@@ -44,13 +44,17 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
                 setCode(code2);
                 setId(data2);
                 setOpps(opps2);
+
+                if (socket)
+                    socket.emit("reconnected", code2);
+
             } catch (error) {
                 console.error('Error parsing data:', error);
             }
         }
-    }, [setCode, setId, setOpps]);
+    }, [socket, setCode, setId, setOpps]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         setTimeout(() => {
             try {
                 window.sessionStorage.setItem('code', JSON.stringify(code));
@@ -62,6 +66,18 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         }, 100);
 
     }, [code, id, opps]);
+
+    useEffect(() => {
+        if (socket) {
+            console.log("hi");
+            socket.on('gamestarting', (arg1) => {
+                console.log("1: " + arg1);
+                setTimeout(() => {
+                    window.location.href = '/games';
+                }, 1000)
+            })
+        }
+    }, [socket]);
 
     const baseURL = "http://localhost:8000/";
     const handleLeaveGame = async () => {
@@ -76,17 +92,11 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         }
     };
 
-    // React.useEffect(() => {
-    //     const interval = setInterval(() => {
-    //         socket.emit('roomEvent', code, (res) => {
-    //             console.log(code);
-    //         });
-    //     }, 1000);
-
-    //     return () => {
-    //         clearInterval(interval);
-    //     };
-    // }, [socket, code]);
+    const handleStart = async () => {
+        await socket.emit("startgame", code, id, (response) => { // pass in ign
+            console.log("response: " + response);
+        })
+    }
 
     return (
         <div className="waiting-wrapper">
@@ -102,9 +112,11 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
                     )
                 })}
             </div>
-            <Link reloadDocument to='/game'> Start </Link>
+            {/* <Link to='/games'> */}
+            <div onClick={(_) => handleStart()}> Start </div>
+            {/* </Link> */}
             <Link to='/'>
-                <div onClick={(_) => handleLeaveGame()}>Leave Game</div>
+                <div onClick={(_) => handleLeaveGame()}> Leave Game </div>
             </Link>
         </div>
     )

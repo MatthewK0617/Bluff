@@ -54,12 +54,12 @@ function App() {
         </p> */}
         <Route path="/" element={<LoadingPage />} />
         <Route path="/settings" element={<Settings socket={socket} code={code} setCode={handleCode} id={id} setId={handleId} setOpps={setOpps} />} />
-        <Route path="/game" element={<ClientGame code={code} />} />
+        <Route path="/games" element={<ClientGame code={code} setCode={setCode} id={id} setId={setId} opps={opps} setOpps={setOpps} socket={socket}/>} />
         <Route path="/waiting" element={<WaitingRoom code={code} setCode={setCode} id={id} setId={setId} opps={opps} setOpps={setOpps} socket={socket} />} />
         <Route path="/joingame" element={<JoinGame codeFinal={code} setCodeFinal={setCode} id={id} setId={setId} opps={opps} setOpps={setOpps} socket={socket} />} />
       </Routes>
     </Router>
-  );
+  ); 
 }
 
 export default App;

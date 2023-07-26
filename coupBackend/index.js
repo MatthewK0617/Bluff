@@ -3,6 +3,7 @@ const sql_db = require('./functions/sql_db.js');
 const create_game = require('./functions/create_game.js');
 const connections_ = require('./functions/connections.js');
 const clear = require('./functions/clear_games.js');
+const game_actions = require('./functions/game_actions.js');
 
 const express = require("express");
 const app = express();
@@ -23,44 +24,48 @@ const io = require('socket.io')(http, {
         origin: "http://localhost:3000"
     }
 });
-const games = io.of('/games');
-
-
-let interval;
-let socket_id;
 
 io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error messages
-    socket_id = socket.id;
+    let socket_id = socket.id;
     console.log(socket.id, "connected");
     console.log((Object.keys(io.sockets.sockets)).length);
-    if (interval) {
-        clearInterval(interval);
-    }
-    interval = setInterval(() => getApiAndEmit(socket), 1000);
-    socket.on("joingame", (arg1, arg2, callback) => {
-        console.log("connected to game. fetching other players");
+
+    socket.on("joinGameWaiting", (arg1, arg2, callback) => {
         socket.join(arg1);
-        socket.emit("getplayers");
+        console.log(io.sockets.adapter.rooms.get(arg1));
+
+        console.log(arg2 + " joined " + arg1);
+        socket.emit("getplayers"); // should be when someone joins room, not in general
         sql_db.getPlayersSocket(arg1, arg2, (error, players) => {
             if (error) {
                 console.error(error);
                 callback(error, null);
             } else {
-                console.log(players);
+                // console.log(players);
                 callback({ players: players }, null);
             }
         });
-        socket.join(arg2);
+        // socket.join(arg2);
     });
 
-    socket.on('roomEvent', (message, callback) => {
-        console.log(message);
-        callback("res");
+    socket.on('startgame', (arg1, arg2, callback) => {
+        console.log("emitting gamestarting " + arg1);
+        console.log(io.sockets.adapter.rooms.get(arg1));
+        io.of('/').to(arg1).emit('gamestarting', arg1);
+        callback(arg1);
+    })
+
+    socket.on('ingame', (arg1, arg2) => {
+        // socket.join(arg1);
+        // console.log(arg2 + " joined " + arg1);
+    })
+
+    socket.on("reconnected", (arg1) => {
+        socket.join(arg1);
     })
 
     socket.on("disconnect", () => {
         console.log(`Client ${socket.id} disconnected`);
-        clearInterval(interval);
     });
 });
 

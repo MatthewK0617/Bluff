@@ -68,7 +68,7 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
         const retrieved_code = game_creator.data.game_code;
         const game_creator_id = game_creator.data.id;
 
-        socket.emit("joingame", retrieved_code, game_creator_id, (response) => {
+        socket.emit("joinGameWaiting", retrieved_code, game_creator_id, (response) => {
             const names = response.players.map(player => player.name);
             setOpps(names);
         });
