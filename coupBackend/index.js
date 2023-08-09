@@ -28,11 +28,10 @@ const io = require('socket.io')(http, {
 io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error messages
     let socket_id = socket.id;
     console.log(socket.id, "connected");
-    console.log((Object.keys(io.sockets.sockets)).length);
+    // console.log((Object.keys(io.sockets.sockets)).length);
 
     socket.on("joinGameWaiting", (arg1, arg2, callback) => {
         socket.join(arg1);
-        console.log(io.sockets.adapter.rooms.get(arg1));
 
         console.log(arg2 + " joined " + arg1);
         socket.emit("getplayers"); // should be when someone joins room, not in general
@@ -41,23 +40,15 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
                 console.error(error);
                 callback(error, null);
             } else {
-                // console.log(players);
                 callback({ players: players }, null);
             }
         });
-        // socket.join(arg2);
     });
 
-    socket.on('startgame', (arg1, arg2, callback) => {
-        console.log("emitting gamestarting " + arg1);
-        console.log(io.sockets.adapter.rooms.get(arg1));
-        io.of('/').to(arg1).emit('gamestarting', arg1);
-        callback(arg1);
-    })
-
-    socket.on('ingame', (arg1, arg2) => {
-        // socket.join(arg1);
-        // console.log(arg2 + " joined " + arg1);
+    socket.on('startgame', (game_code, arg2, callback) => {
+        io.of('/').to(game_code).emit('gamestarting', game_code);
+        sql_db.joinGame(game_code);
+        callback(game_code);
     })
 
     socket.on("reconnected", (arg1) => {
@@ -67,6 +58,18 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
     socket.on("disconnect", () => {
         console.log(`Client ${socket.id} disconnected`);
     });
+
+    socket.on("take_coins", (code, giverId, receiverId, trans_amount) => { // id represents the one who the action is taken upon
+        let coins = [];
+        game_actions.coin_transactions(code, giverId, receiverId, trans_amount, (err, res) => {
+            if (err) console.log(err);
+            else {
+                coins = res;
+                console.log(coins);
+                io.emit('give_coins', coins[0], receiverId, coins[1], giverId);
+            }
+        });
+    })
 });
 
 /**
@@ -102,8 +105,12 @@ app.get(`/getInitialPlayerData`, (req, res) => {
     sql_db.getInitialPlayerData(req, res);
 })
 
-app.post('/getPlayerData', (req, res) => {
-    sql_db.getPlayerData(req, res);
+// app.post('/getPlayerData', (req, res) => {
+//     sql_db.getPlayerData(req, res);
+// })
+
+app.get('/getPlayersInGame', (req, res) => {
+    sql_db.getPlayersInGame(req, res);
 })
 
 /**
@@ -127,15 +134,20 @@ app.post('/createGame', (req, res) => {
     create_game.createGame(io, req, res);
 });
 
+app.post('/joinGame', (req, res) => {
+    sql_db.joinGame(req, res);
+})
+
+/**
+ * leave game
+ */
 app.post("/leaveGame", (req, res) => {
     sql_db.leaveGame(req, res);
 })
 
-const getApiAndEmit = socket => {
-    const response = new Date();
-    // Emitting a new message. Will be consumed by the client
-    socket.emit("FromAPI", response);
-};
+app.post("/leaveInGame", (req, res) => {
+    sql_db.leaveInGame(req, res);
+})
 
 /* listener check */
 http.listen(PORT, () => {

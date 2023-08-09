@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import Axios from 'axios';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 
 import './WaitingRoom.css';
 
@@ -15,8 +15,8 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
                 }
             })
                 .then((response) => {
-                    const opps = response.data.map((opp) => opp.name);
-                    setOpps(opps);
+                    // const opps = response.data.map((opp) => opp.name);
+                    setOpps(response.data);
                     window.sessionStorage.setItem('opps', JSON.stringify(opps));
                 })
                 .catch((error) => {
@@ -27,11 +27,11 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         return () => {
             clearInterval(interval);
         };
-    }, [code, setOpps]);
+    }, [code, setOpps, opps]);
 
     useEffect(() => {
         const data1 = window.sessionStorage.getItem('code');
-        const data2 = window.sessionStorage.getItem('id');
+        const data2 = parseInt(window.sessionStorage.getItem('id'));
         const data3 = window.sessionStorage.getItem('opps');
         // const data4 = window.sessionStorage.getItem('socketRoomPath');
 
@@ -87,6 +87,10 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
                 id: id
             });
             window.sessionStorage.clear();
+
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000)
         } catch (error) {
             console.log(error);
         }
@@ -100,24 +104,22 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
 
     return (
         <div className="waiting-wrapper">
-            <div>
-                {code} + {id}
+            <div className="game-info">
+            {code}
             </div>
-            <div>
+            <div className="all-waiting-players-wrapper">
                 {opps.map((v, i) => {
                     return (
-                        <div key={i}>
-                            {v}
+                        <div className="waiting-player" key={i}>
+                            {v.name}
                         </div>
                     )
                 })}
             </div>
-            {/* <Link to='/games'> */}
-            <div onClick={(_) => handleStart()}> Start </div>
-            {/* </Link> */}
-            <Link to='/'>
-                <div onClick={(_) => handleLeaveGame()}> Leave Game </div>
-            </Link>
+            <div className="button-wrapper">
+                <div className="waiting-leave" onClick={(_) => handleLeaveGame()}> Quit </div>
+                <div className="waiting-start" onClick={(_) => handleStart()}> Start </div>
+            </div>
         </div>
     )
 }

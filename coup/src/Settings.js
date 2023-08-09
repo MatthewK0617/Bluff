@@ -66,11 +66,11 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
             }
         })
         const retrieved_code = game_creator.data.game_code;
-        const game_creator_id = game_creator.data.id;
+        const game_creator_id = parseInt(game_creator.data.id);
 
         socket.emit("joinGameWaiting", retrieved_code, game_creator_id, (response) => {
-            const names = response.players.map(player => player.name);
-            setOpps(names);
+            // const names = response.players.map(player => player.name);
+            setOpps(response.players);
         });
 
         setCode(retrieved_code);
@@ -101,8 +101,8 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
                 })}
             </div>
 
-            <Link to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
-            <Link reloadDocument to='/'> Back </Link>
+            <Link className="settings-links" to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
+            <Link className="settings-links" to='/'> Back </Link>
 
         </div>
     )

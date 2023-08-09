@@ -4,25 +4,30 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    /* background-color: blue; */
-
+    background-color: #202123;
+    height: 100vh;
 }
 
 .settings-wrapper-2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* background-color: blue; */
-
+    background-color: #343641;
+    top: -10%;
+    position: relative;
+    padding: 2rem;
+    margin: 1rem;
+    border-radius: 0.6rem;
 }
 
 .counter {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* background-color: blue; */
-    /* padding: 10%; */
-    margin: 1%;
+    font-size: large;
+    color: #d1d5db;
+    padding: 0.2rem;
+    margin: 0.2rem;
     flex-direction: column;
 }
 
@@ -52,4 +57,21 @@ input[type=Submit] {
     padding: 12px 20px;
     margin: 8px 0;
     box-sizing: border-box;
+}
+
+.settings-links {
+    background-color: #000000;
+    font-style: normal;
+    text-decoration: none;
+    font-size: x-large;
+    color: #db3b7e;
+    padding: 1rem;
+    margin: 0.4rem;
+    border: 0.1rem solid transparent;
+    border-radius: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.settings-links:hover {
+    border: 0.1rem solid #fffff0;
 }

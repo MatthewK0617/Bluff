@@ -109,8 +109,8 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
                     let id2 = getPlayerDataRes.data.id;
                     setId(id2);
                     socket.emit("joinGameWaiting", code, id2, (response) => {
-                        const names = response.players.map(player => player.name);
-                        setOpps(names);
+                        // const names = response.players.map(player => player.name);
+                        setOpps(response.players);
                     });
                 } else {
                     console.log("Invalid ign");
@@ -143,14 +143,14 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
                 <form
                     ref={formRef}
                     onSubmit={onSubmit}
-                    className="form border border-primary"
+                    className="form"
                 >
-                    <input value={ign} onChange={onChangeIgn} placeholder="username" />
-                    <input value={code} onChange={onChangeCode} placeholder="code" />
+                    <input className="input" value={ign} onChange={onChangeIgn} placeholder="username" />
+                    <input className="input" value={code} onChange={onChangeCode} placeholder="code" />
                     <button type="submit" hidden>Submit</button>
                 </form>
             </div>
-            <Link reloadDocument to='/'> Back </Link>
+            <Link className="join-game-links" to='/'> Back </Link>
         </div>
     );
 }

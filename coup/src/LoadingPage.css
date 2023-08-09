@@ -1,0 +1,42 @@
+.loading-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #202123;
+    cursor: default;
+}
+
+.title {
+    /* background-color: white; */
+    font-size: 6rem;
+    padding: 2rem;
+    position: absolute;
+    top: 15vh;
+    color: whitesmoke;
+}
+
+.title span {
+    display: inline-block;
+    /* opacity: 0; */
+    transform: translateY(20px);
+    /* transition: opacity 0.5s ease-in, transform 0.5s ease-in-out; */
+  }
+
+.loading-page-links {
+    background-color: #000000;
+    font-style: normal;
+    text-decoration: none;
+    font-size: x-large;
+    color: #db3b7e;
+    padding: 1rem;
+    margin: 0.4rem;
+    border: 0.1rem solid transparent;
+    border-radius: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.loading-page-links:hover {
+    border: 0.1rem solid #fffff0;
+}

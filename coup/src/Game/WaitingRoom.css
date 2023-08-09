@@ -1,9 +1,98 @@
 .waiting-wrapper {
-    /* background-color: black; */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    background-color: #000000;
+    height: 100vh;
+}
+
+.game-info {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-    /* background-color: blue; */
+    font-size: 3.6rem;
+    /* font-weight: bolder; */
+    /* text-decoration: underline; */
+    color: #2a88c0;
+    position: relative;
+    padding-top: 4vh;
+    padding-bottom: 3vh;
+}
 
+.all-waiting-players-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    position: relative;
+    margin: 0 auto;
+    width: 80vw;
+    height: 50vh;
+    /* border-top: 0.01rem  */
+    border-left: 0.01rem solid white;
+    border-right: 0.01rem solid white;
+    /* top: 4vh; */
+    /* background-color: #343641; */
+}
+
+.waiting-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-color: #40414f;
+    border: 0.1rem solid transparent;
+    box-shadow: 0 0 10px rgba(42, 136, 192, 0.6);
+    padding: 1rem;
+    margin: 0.4rem;
+    border-radius: 0.2rem;
+    color: #fffff0;
+    font-size: 1.2rem;
+    font-weight: bolder;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.button-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    margin: 0.2rem;
+}
+
+.waiting-start {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #b5b8c0;
+    box-sizing: border-box;
+    border: 0.1rem solid transparent;
+    border-radius: 0.1rem;
+    padding: 0.4rem;
+    margin: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.waiting-start:hover {
+    border: 0.1rem solid #fffff0;
+}
+
+.waiting-leave {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #b5b8c0;
+    box-sizing: border-box;
+    border: 0.1rem solid transparent;
+    border-radius: 0.1rem;
+    padding: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.waiting-leave:hover {
+    border: 0.1rem solid #fffff0;
 }

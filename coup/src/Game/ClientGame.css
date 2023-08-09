@@ -1,9 +1,174 @@
+/* Reset default styles */
+body,
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Wrapper for client content */
 .client-wrapper {
-    /* background-color: black; */
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    /* background-color: blue; */
+    height: 100vh;
+    background-color: #202123;
+    cursor: default;
+}
 
+/* Info box */
+.inf {
+    background-color: #c6cad0;
+    padding: 0.2rem;
+    border-radius: 0.2rem;
+    /* margin: 2rem; */
+}
+
+/* Wrapper for players */
+.players-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    margin: 0 auto;
+    width: 80vw;
+    height: 90vh;
+    background-color: #343641;
+}
+
+/* Player cards */
+.players {
+    display: flex;
+    justify-content: space-between;
+}
+
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #40414f;
+    border: 0.1rem solid transparent;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+    border-radius: 0.2rem;
+    font-size: 1.5rem;
+    font-weight: bolder;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.player .name {
+    color: #10a37f;
+}
+
+/* Game box */
+.game-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    top: -100%;
+    /* transform: translateX(-50%); */
+    background-color: rgb(206, 182, 46);
+    border: 0.2rem solid transparent;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+    border-radius: 10rem;
+    width: 5rem;
+    height: 5rem;
+    font-size: 4rem;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    order: 1;
+}
+
+.game-div:hover {
+    border: 0.2rem solid #fffff0;
+}
+
+/* Opponents' info */
+.opponents {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: -200%;
+    position: relative;
+    margin: 0.4rem;
+    padding: 0.6rem;
+    background-color: #444654;
+    border: 0.1rem solid transparent;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border-radius: 0.2rem;
+}
+
+.opponents:hover {
+    border: 0.1rem solid #fffff0;
+}
+
+/* Player name and coins */
+.name {
+    margin: 0.2rem;
+    color: #b5b8c0
+}
+
+.coin-card-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0.2rem;
+}
+
+.coins {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(206, 182, 46);
+    padding: 0.2rem;
+    margin: 0.4rem;
+    border-radius: 10rem;
+    width: 2rem;
+    height: 2rem;
+}
+
+.cards {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+    /* margin: 0.2rem; */
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    border: 0.1rem solid #fffff0;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+}
+
+.leave-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color:#b5b8c0;
+    box-sizing: border-box;
+    border: 0.1rem solid transparent;
+    border-radius: 0.1rem;
+    padding: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /* cursor: crosshair; */
+}
+
+.leave-button:hover {
+    border: 0.1rem solid #fffff0;
 }

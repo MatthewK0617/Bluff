@@ -1,33 +1,46 @@
-function take_game_coins(req, res) {
-    const { code, n, player_coins } = req.body;
+const db = require('../config/db');
 
-    // Check if required properties exist and are valid
-    if (code === undefined || n === undefined || player_coins === undefined) {
-        return res.status(400).json({ error: 'Invalid request. Missing required properties.' });
-    }
+// giver and receiver are objects: {id: __, coins: __}
+function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
+    let game = "gd" + code;
+    db.query(`SELECT coins FROM ?? WHERE id=?`, [game, receiverId], (err, res) => {
+        if (err) console.log(err);
+        else {
+            let receiverCoins = res[0].coins;
+            db.query(`SELECT coins FROM ?? WHERE id=?`, [game, giverId], (err, res) => {
+                let giverCoins = res[0].coins;
+                console.log(trans_amount, giverCoins, receiverCoins);
 
-    if (!Number.isInteger(n) || n <= 0) {
-        return res.status(400).json({ error: 'Invalid value for "n". It should be a positive integer.' });
-    }
+                if (giverCoins - trans_amount < 0) {
+                    receiverCoins += giverCoins;
+                    giverCoins = 0;
+                }
+                else {
+                    receiverCoins += trans_amount;
+                    giverCoins -= trans_amount;
+                }
+                console.log(trans_amount, giverCoins, receiverCoins);
 
-    if (!Number.isInteger(player_coins) || player_coins < 0) {
-        return res.status(400).json({ error: 'Invalid value for "player_coins". It should be a non-negative integer.' });
-    }
+                db.query(`UPDATE ?? SET coins=? WHERE id=?`, [game, receiverCoins, receiverId], (err) => {
+                    if (err) console.log(err);
+                });
+                db.query(`UPDATE ?? SET coins=? WHERE id=?`, [game, giverCoins, giverId], (err) => {
+                    if (err) console.log(err);
+                });
+                let coins = [receiverCoins, giverCoins];
+                callback(null, coins);
 
-    // Perform calculations
-    let gameCoins = 50 - n;
-    let updatedPlayerCoins = player_coins + n;
+                // let giverCoins = res[0];
+            })
+        }
+    })
 
-    let data = { game_coins: gameCoins, player_coins: updatedPlayerCoins };
-    res.send(data);
-}
-
-
-function take_player_coins(req, res) {
-    const code = req.body.code;
-    const n = req.body.n;
-    let player1_coins = 0;
-    let player2_coins = 0;
+    // access the game at the given code
+    // get {giverIds} coins -- remember to avoid sql injections
+    // add trans_amount to the receiverCoins
+    // subtract trans_amount from the giverCoins
+    // update both in the db
+    // return the receiverCoins and giverCoins in an array
 }
 
 /**
@@ -80,6 +93,5 @@ function take_player_coins(req, res) {
  */
 
 module.exports = {
-    take_game_coins,
-    take_player_coins,
+    coin_transactions,
 }

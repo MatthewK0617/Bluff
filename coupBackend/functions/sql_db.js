@@ -1,92 +1,6 @@
 // maybe make error handler function
 const db = require('../config/db');
 
-
-// function handleDisconnect(socket_id) {
-//     let length = 0;
-
-//     // find table associated with socket_id
-//     // -> this is the same thing as searching for the socket
-//     // if there's no table, it doesn't exist
-//     // otherwise, continue and delete
-
-//     /**
-//      * SOLUTIONS FOR LINE 1
-//      * 1) 
-//      * a. O((N+M)/N)
-//      * process: create a hash table with key value and store so search is easy (look at B-Tree indexing)
-//      * problem: collisions; chaining is impossible? how to create efficient linked-list
-//      * 
-//      * b. O(N) -- recommended by openAI (modifications to decrease costs are probably acceptable)
-//      * process: do not hash and just keep a table full of participants and add a new column 
-//      * that includes game
-//      * problem: expensive 
-//      * solution: add sorted based on gameid to allow for binary search
-//      * 
-//      * 2) O(N)
-//      * process: search through all the tables (1 per game)
-//      * problem: expensive; more tables is not good either
-//      */
-
-//     let count = 0;
-//     let code = "";
-//     console.log("id " + socket_id);
-
-//     // make sure that there is a game; if disconnecting socket isn't in current players don't do anything
-//     db.query(`SELECT game_code FROM current_players WHERE socket_id='${socket_id}'`, (err, res) => {
-//         if (err) {
-//             console.log(err);
-//         }
-//         else if (typeof res[0] === 'undefined') { // res[0] is the gamecode
-//             return;
-//         }
-//         else {
-//             console.log("hi");
-//             code = res[0].game_code;
-//             console.log("code " + code);
-
-//             db.query(`DELETE FROM current_players WHERE socket_id='${socket_id}'`, (err, res) => {
-//                 if (err) {
-//                     console.log(err);
-//                 }
-//             })
-
-//             if (code !== "") {
-//                 db.query(`SELECT player_count FROM current_games WHERE code=${code}`, (err, res) => {
-//                     if (err) {
-//                         console.log(err);
-//                     }
-//                     else {
-//                         count = res[0].player_count;
-//                         count = count - 1;
-//                     }
-//                 })
-//             }
-
-//             db.query(`UPDATE current_games SET player_count = ${count} WHERE code=${code}`, (err, res) => {
-//                 if (err) {
-//                     console.log(err);
-//                 }
-//             })
-
-//             if (count == 0) {
-//                 db.query(`DELETE FROM current_games WHERE player_count=0`, (err, res) => {
-//                     if (err) {
-//                         console.log(err);
-//                     }
-//                 });
-
-//                 let cd_current = "cd" + code;
-//                 db.query(`DROP TABLE ${cd_current}`, (err, res) => {
-//                     if (err) {
-//                         console.log(err);
-//                     }
-//                 });
-//             }
-//         }
-//     })
-// }
-
 function getGames(req, res) {
     db.query("SELECT * FROM current_games", (err, result) => {
         if (err) {
@@ -101,10 +15,9 @@ function getGames(req, res) {
 }
 
 function getPlayersSocket(code, id, callback) {
-    console.log(code);
-    db.query(`SELECT * FROM current_players WHERE game_code='${code}'`, (err, res) => {
+    db.query(`SELECT * FROM current_players WHERE game_code=?`, [code], (err, res) => {
         if (err) {
-            console.error(err);
+            console.log(err);
             callback(err, null);
         } else {
             const players = res.map(row => ({
@@ -120,30 +33,42 @@ function getPlayersSocket(code, id, callback) {
 
 function getPlayers(req, res) {
     const code = req.query.code;
-    db.query(`SELECT * FROM current_players WHERE game_code='${code}'`, (err, result) => {
+    db.query(`SELECT * FROM current_players WHERE game_code=?`, [code], (err, result) => {
         if (err) {
             console.error(err);
         } else {
             const players = result.map(row => ({
                 name: row.name,
                 id: row.id,
-                socket_id: row.socket_id
+                socket_id: row.socket_id, 
             }));
             res.send(players);
         }
     });
 }
 
-/**
- * 
- * @param {*} req 
- * @param {*} res 
- */
+function getPlayersInGame(req, res) { 
+    const game = "gd" + req.query.code;
+    db.query(`SELECT * FROM ??`, [game], (err, result) => {
+        if (err) {
+            console.error(err);
+        } else {
+            const players = result.map(row => ({
+                name: row.username,
+                id: row.id,
+                coins: row.coins,
+                c1: row.card_1,
+                c2: row.card_2,
+            }));
+            // console.log(players);
+            res.send(players);
+        }
+    });
+}
+
 function getInitialPlayerData(req, res) {
-    console.log(11);
-    console.log(req.query);
     let socket_id = req.query.socket_id;
-    db.query(`SELECT game_code, id FROM current_players WHERE socket_id='${socket_id}'`, (err, result) => {
+    db.query(`SELECT game_code, id FROM current_players WHERE socket_id=?`, [socket_id], (err, result) => {
         if (err) {
             console.log(err);
             res.status(500).send('An error occurred');
@@ -166,7 +91,7 @@ function getInitialPlayerData(req, res) {
 function getPlayerData(req, res) {
     const playerID = req.body.playerID;
 
-    db.query(`SELECT game_code FROM current_players where id=${playerID}`, (err, result) => {
+    db.query(`SELECT game_code FROM current_players where id=?`, [playerID], (err, result) => {
         err ? console.log(err) : res.send(result);
     })
 
@@ -179,7 +104,8 @@ function addPlayers(app, req, res) {
     let id = Math.floor(100000 + Math.random() * 900000);
 
     let count = 0;
-    db.query(`INSERT INTO current_players (name, id, socket_id, game_code) VALUES ('${username}', ${id}, '${socket_id}', ${code})`, (err, result) => {
+    db.query(`INSERT INTO current_players (name, id, socket_id, game_code) 
+    VALUES (?, ?, ?, ?)`, [username, id, socket_id, code], (err, result) => {
         if (err) {
             console.log(err);
         }
@@ -188,7 +114,7 @@ function addPlayers(app, req, res) {
         }
     })
 
-    db.query(`SELECT player_count FROM current_games WHERE code=${code}`, (err, res) => {
+    db.query(`SELECT player_count FROM current_games WHERE code=?`, [code], (err, res) => {
         if (err) {
             console.log(err);
         }
@@ -196,7 +122,7 @@ function addPlayers(app, req, res) {
             count = res[0].player_count;
             count = count + 1;
 
-            db.query(`UPDATE current_games SET player_count=${count} WHERE code='${code}'`, (err, res) => {
+            db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, res) => {
                 if (err) {
                     console.log(err);
                 }
@@ -217,36 +143,37 @@ function updateCardData(app, req) { // needed if you want to change card mechani
     const r2 = req.body.r2;
     const r3 = req.body.r3;
 
-    db.query(`UPDATE ${curr_game} SET num=${num}, r1=${r1}, r2=${r2}, r3=${r3} WHERE id='${id}'`, (err, result) => {
+    db.query(`UPDATE ?? SET num=?, r1=?, r2=?, r3=? WHERE id=?`, [curr_game, num, r1, r2, r3, id], (err, result) => {
         if (err) {
             console.log(err);
         }
-        // console.log(result);
     })
 }
 
-function leaveGame(req, res) {
+function leaveGame(req, res1) {
     let code = req.body.code;
     let id = req.body.id;
     let count = 0;
     console.log(id);
 
-    db.query(`DELETE FROM current_players WHERE id=${id}`, (err, result) => {
+    db.query(`DELETE FROM current_players WHERE id=?`, [id], (err, result) => {
         if (err) {
             console.log(err);
         }
 
         if (code !== "") {
-            db.query(`SELECT player_count FROM current_games WHERE code='${code}'`, (err, res) => {
+            db.query(`SELECT player_count FROM current_games WHERE code=?`, [code], (err, res) => {
                 console.log("code: " + code);
                 console.log(res);
                 if (err) {
                     console.log(err);
                 } else {
+                    console.log(res);
                     count = res[0].player_count;
                     count = count - 1;
+                    console.log(count);
 
-                    db.query(`UPDATE current_games SET player_count=${count} WHERE code='${code}'`, (err, result) => {
+                    db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, result) => {
                         if (err) {
                             console.log(err);
                         }
@@ -259,7 +186,7 @@ function leaveGame(req, res) {
                             });
 
                             let cd_current = "cd" + code;
-                            db.query(`DROP TABLE ${cd_current}`, (err, result) => {
+                            db.query(`DROP TABLE ??`, [cd_current], (err, result) => {
                                 if (err) {
                                     console.log(err);
                                 }
@@ -269,19 +196,103 @@ function leaveGame(req, res) {
                 }
             });
         }
+        res1.send("completed");
     });
-    res.send("Completed");
 }
 
+function leaveInGame(req, res1) {
+    let code = req.body.code;
+    let id = req.body.id;
+    let game_data = "gd" + code;
+
+    db.query(`DELETE FROM ?? WHERE id=?`, [game_data, id], (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+
+        if (code !== "") {
+            db.query(`SELECT player_count FROM current_games WHERE code=?`, [code], (err, res) => {
+                console.log("code: " + code);
+                console.log(res);
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(res);
+                    count = res[0].player_count;
+                    count = count - 1;
+                    console.log(count);
+
+                    db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, result) => {
+                        if (err) {
+                            console.log(err);
+                        }
+
+                        if (count === 0) {
+                            db.query(`DELETE FROM current_games WHERE player_count=0`, (err, result) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            });
+
+                            let card_data = "cd" + code;
+                            db.query(`DROP TABLE ??`, [card_data], (err, result) => {
+                                if (err) console.log(err);
+                                else {
+                                    db.query(`DROP TABLE ??`, [game_data], (err, result) => {
+                                        if (err) console.log(err);
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+    res1.send("completed");
+}
+
+function joinGame(game_code) {
+    let game_data = "gd" + game_code;
+    // get players and delete players once theyre added to the other db
+
+    db.query(`SELECT * FROM current_players WHERE game_code=?`, [game_code], (err, res) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            const players = res.map(row => ({
+                name: row.name,
+                id: row.id,
+            }));
+            console.log(players[0].name);
+            console.log(res);
+            for (let i = 0; i < players.length; i++) {
+                db.query(`INSERT INTO ${game_data} (id, username, coins) 
+                VALUES (?, ?, ?)`, [players[i].id, players[i].name, 2], (err, res_) => {
+                    if (err) console.log(err);
+                    else {
+                        db.query(`DELETE FROM current_players WHERE id=?`, [players[i].id], (err, res__) => {
+                            if (err) console.log(err);
+                            else console.log(res__);
+                        })
+                    }
+                })
+            }
+        }
+    })
+}
 
 module.exports = {
-    // handleDisconnect, 
     getGames,
     getPlayersSocket,
     getPlayers,
     getInitialPlayerData,
     getPlayerData,
+    getPlayersInGame,
     addPlayers,
     updateCardData,
     leaveGame,
+    leaveInGame,
+    joinGame
 }
