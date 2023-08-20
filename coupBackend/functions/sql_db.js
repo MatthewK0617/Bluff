@@ -187,8 +187,12 @@ function leaveGame(req, res1) {
 
                             let cd_current = "cd" + code;
                             db.query(`DROP TABLE ??`, [cd_current], (err, result) => {
-                                if (err) {
-                                    console.log(err);
+                                if (err) console.log(err);
+                                else {
+                                    let game_data = "gd" + code;
+                                    db.query(`DROP TABLE ??`, [game_data], (err, result) => {
+                                        if (err) console.log(err);
+                                    });
                                 }
                             });
                         }
@@ -253,34 +257,37 @@ function leaveInGame(req, res1) {
 }
 
 function joinGame(game_code) {
-    let game_data = "gd" + game_code;
-    // get players and delete players once theyre added to the other db
-
-    db.query(`SELECT * FROM current_players WHERE game_code=?`, [game_code], (err, res) => {
-        if (err) {
-            console.log(err);
-        }
-        else {
-            const players = res.map(row => ({
-                name: row.name,
-                id: row.id,
-            }));
-            console.log(players[0].name);
-            console.log(res);
-            for (let i = 0; i < players.length; i++) {
-                db.query(`INSERT INTO ${game_data} (id, username, coins) 
-                VALUES (?, ?, ?)`, [players[i].id, players[i].name, 2], (err, res_) => {
-                    if (err) console.log(err);
-                    else {
-                        db.query(`DELETE FROM current_players WHERE id=?`, [players[i].id], (err, res__) => {
-                            if (err) console.log(err);
-                            else console.log(res__);
-                        })
-                    }
-                })
+    return new Promise((resolve, reject) => {
+        let game_data = "gd" + game_code;
+        // get players and delete players once theyre added to the other db
+    
+        db.query(`SELECT * FROM current_players WHERE game_code=?`, [game_code], (err, res) => {
+            if (err) {
+                console.log(err);
             }
-        }
+            else {
+                const players = res.map(row => ({
+                    name: row.name,
+                    id: row.id,
+                }));
+                console.log(players[0].name);
+                console.log(res);
+                for (let i = 0; i < players.length; i++) {
+                    db.query(`INSERT INTO ${game_data} (id, username, coins) 
+                    VALUES (?, ?, ?)`, [players[i].id, players[i].name, 2], (err, res_) => {
+                        if (err) console.log(err);
+                        else {
+                            db.query(`DELETE FROM current_players WHERE id=?`, [players[i].id], (err, res__) => {
+                                if (err) console.log(err);
+                                else resolve();
+                            })
+                        }
+                    })
+                }
+            }
+        })
     })
+    
 }
 
 module.exports = {

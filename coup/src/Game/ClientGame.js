@@ -88,7 +88,10 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                     });
             };
 
+            // define other functions
+
             socket.on('give_coins', handleGiveCoins);
+            // socket.on('ambassador_')
 
             return () => {
                 socket.off('give_coins', handleGiveCoins);

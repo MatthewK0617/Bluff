@@ -45,11 +45,17 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
         });
     });
 
-    socket.on('startgame', (game_code, arg2, callback) => {
+    socket.on('startgame', async (game_code, arg2, callback) => {
         io.of('/').to(game_code).emit('gamestarting', game_code);
-        sql_db.joinGame(game_code);
-        callback(game_code);
-    })
+        await sql_db.joinGame(game_code);
+        await game_actions.distribute_cards(game_code);
+        callback(game_code); // this callback is for the socket.on(startgame) return function
+
+        // Wait for distribute_cards function to complete
+
+        // Continue with the rest of your code
+    });
+
 
     socket.on("reconnected", (arg1) => {
         socket.join(arg1);
@@ -69,6 +75,59 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
                 io.emit('give_coins', coins[0], receiverId, coins[1], giverId);
             }
         });
+    })
+
+    socket.on("coup", (code, agentId, receiverId, card) => {
+        // ADD CARD TO TAKE_COINS
+        let cost = 7;
+        if (card === "ass") cost = 3;
+        let coins = [];
+        // stop coin from being updated if not enough coins to be taken/not enough coins used
+        // limit this in front-end
+        game_actions.coin_transactions(code, agentId, -1, cost, (err, res) => {
+            if (err) console.log(err);
+            else {
+                coins = res;
+                console.log(coins);
+                // emit pick_card to delete
+                game_actions.delete_card(receiverId, (err, res) => {
+                    if (err) console.log(err);
+                    else {
+
+                    }
+                })
+            }
+        })
+
+        // if 7, then contessa can't block
+        // should I pass in what card was used? 
+        // I should because receiver needs to know
+        // emit
+    })
+
+    socket.on("swap", (code, agentId, card) => {
+        // ambassador and judge
+    })
+
+    socket.on("view", (code, agentId, receiverId, card) => {
+        // judge r1
+        // emit
+    })
+
+    socket.on("block_steal", (code, agentId, receiverId, card) => {
+        // receiver is now the person whos attempt is blocked
+        // agent is the person whos blocking
+        // emit
+    })
+
+    socket.on("block_coup", (code, agentId, receiverId, card) => {
+        // contessa 
+        // emit
+    })
+
+    socket.on("challenge", (code, agentId, card) => {
+        // lose card if opponent has card
+        // otherwise, opponent loses card
     })
 });
 

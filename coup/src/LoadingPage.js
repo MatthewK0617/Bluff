@@ -23,11 +23,11 @@ export default function LoadingPage() {
     return (
         <div className="loading-wrapper">
             <div className="title">
-                {letters.map((letter, index) => (
+                {/* {letters.map((letter, index) => (
                     <span key={index} style={{ transitionDelay: `${index * 100}ms` }}>
                         {letter}
                     </span>
-                ))}
+                ))} */}
             </div>
             <Link className='loading-page-links' to='/settings'>
                 <div>
