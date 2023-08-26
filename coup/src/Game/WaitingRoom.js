@@ -71,7 +71,7 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         if (socket) {
             console.log("hi");
             socket.on('gamestarting', (arg1) => {
-                console.log("1: " + arg1);
+                console.log(arg1);
                 setTimeout(() => {
                     window.location.href = '/games';
                 }, 1000)

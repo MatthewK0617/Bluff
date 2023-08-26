@@ -1,0 +1,36 @@
+.actions-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.take-coins-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    height: 10vh;
+    width: 10vw;
+    border: 0.1rem solid #fffff0;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+
+    font-size: x-large;
+}
+
+.card-base {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    height: 15vh;
+    width: 10vw;
+    border: 0.1rem solid #fffff0;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+
+    font-size: x-large;
+}
