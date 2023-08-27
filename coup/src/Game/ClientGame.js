@@ -13,6 +13,10 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);
     let [action, setAction] = useState(null); // card, id, giverId, coin_transaction, 
+    let [selectedPlayer, setSelectedPlayer] = useState(""); // has to be here because this is where 
+    // the opps are mapped
+    let [selectedArray, setSelectedArray] = useState([false, false, false, false, false, false]);
+
 
     // Simulate fetching the player count (you can replace this with your actual data fetching logic)
 
@@ -150,9 +154,9 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
         }
     };
 
-    const endTurn = () => { // master function
+    const endTurn = () => { 
         console.log(action);
-        if (action.card === 'Coins') {
+        if (action.card === "def") {
             console.log(action);
             socket.emit("take_coins", code, action.giverId, id, action.coin_trans);
         }
@@ -162,6 +166,7 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
         }
         setIsTurn(false);
         setAction(null);
+        setSelectedArray([false, false, false, false, false, false]);
         console.log(turn);
         socket.emit('end_turn', code, turn, opps.length - 1);
     }
@@ -225,7 +230,7 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                 {/* if player selected and action is complete */}
                 {action && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
                 <div className="usable-cards">
-                    <Actions code={code} id={id} action={action} setAction={setAction} isTurn={isTurn}/>
+                    <Actions code={code} id={id} action={action} setAction={setAction} isTurn={isTurn} selectedArray={selectedArray} setSelectedArray={setSelectedArray} />
                 </div>
             </div>
             <div className="leave-button" onClick={(_) => handleLeaveInGame()}> Leave Game </div>
@@ -235,11 +240,7 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
 
 /**
  * features left to implement:
- * card distribution
  * card tasks (add to same useEffect listener)
  * end game
- * limiting per turn
  * 
- * when leaving game into settings, either add back into current players
- * or remove the option to go to settings after leaving game
  */

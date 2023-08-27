@@ -34,3 +34,19 @@
 
     font-size: x-large;
 }
+
+.card-specific-options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #b5b8c0;
+    box-sizing: border-box;
+    border: 0.1rem solid transparent;
+    border-radius: 0.1rem;
+    padding: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    order: 0;
+    bottom: 50vh;
+}

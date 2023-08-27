@@ -13,7 +13,7 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
         {
             id: 'amb',
             num: 4,
-            r1: true,
+            r1: true, 
             r2: true,
             r3: true
         },
