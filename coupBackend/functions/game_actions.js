@@ -1,5 +1,13 @@
 const db = require('../config/db');
 
+function update_game_turn(code, turn) {
+    let game = "gd" + code;
+    db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, turn, -1], (err, res) => {
+        if (err) console.log(err);
+        else console.log(res);
+    })
+}
+
 function distribute_cards(code) {
     return new Promise((resolve, reject) => {
         // need code, thats it?
@@ -87,6 +95,7 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
     db.query(`SELECT coins FROM ?? WHERE id=?`, [game, receiverId], (err, res) => {
         if (err) console.log(err);
         else {
+            // console.log()
             let receiverCoins = res[0].coins;
             db.query(`SELECT coins FROM ?? WHERE id=?`, [game, giverId], (err, res) => {
                 let giverCoins = res[0].coins;
@@ -125,7 +134,7 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
 }
 
 function delete_card(receiverId) {
-
+    // implement
 }
 
 /**
@@ -178,6 +187,7 @@ function delete_card(receiverId) {
  */
 
 module.exports = {
+    update_game_turn,
     distribute_cards,
     coin_transactions,
     delete_card,

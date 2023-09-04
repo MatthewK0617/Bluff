@@ -30,13 +30,13 @@ function createGame(io, req, res) {
         }
     })
 
-    db.query(`CREATE TABLE ${game_data} (id int, username text, coins int, card_1 text, card_2 text)`, (err, result) => {
+    db.query(`CREATE TABLE ${game_data} (id int, username text, coins int, card_1 text, card_2 text, turnOrder int)`, (err, result) => {
         if (err) {
             console.log(err);
         }
         else {
-            db.query(`INSERT INTO ${game_data} (id, username, coins) VALUES 
-                (-1, 'game', 50)`,
+            db.query(`INSERT INTO ${game_data} (id, username, coins, turnOrder) VALUES 
+                (-1, 'game', 50, 0)`,
                 (err, result) => {
                     if (err) {
                         console.log(err);

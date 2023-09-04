@@ -25,7 +25,7 @@ const io = require('socket.io')(http, {
     }
 });
 
-io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error messages
+io.on("connection", (socket) => {
     let socket_id = socket.id;
     console.log(socket.id, "connected");
     // console.log((Object.keys(io.sockets.sockets)).length);
@@ -50,23 +50,35 @@ io.on("connection", (socket) => { // maybe add a lobby to avoid annoying error m
         await sql_db.joinGame(game_code);
         await game_actions.distribute_cards(game_code);
         callback(game_code); // this callback is for the socket.on(startgame) return function
-
-        // Wait for distribute_cards function to complete
-
-        // Continue with the rest of your code
     });
 
 
     socket.on("reconnected", (arg1) => {
         socket.join(arg1);
-    })
+    });
 
     socket.on("disconnect", () => {
         console.log(`Client ${socket.id} disconnected`);
     });
 
+    // socket.on("end_turn", () => {
+    //     // io.emit('start_counters');
+    // });
+
+    socket.on("end_turn", (code, defender, attacker, turn, player_count) => {
+        let next_turn = turn + 1;
+        if (player_count === next_turn) next_turn = 0;
+        console.log(next_turn);
+        // defender should be able to respond to attacker
+        // io.emit()
+
+        game_actions.update_game_turn(code, next_turn);
+        io.emit("next_turn", code, next_turn);
+    })
+
     socket.on("take_coins", (code, giverId, receiverId, trans_amount) => { // id represents the one who the action is taken upon
         let coins = [];
+
         game_actions.coin_transactions(code, giverId, receiverId, trans_amount, (err, res) => {
             if (err) console.log(err);
             else {
@@ -156,6 +168,14 @@ app.get("/getGames", (req, res) => {
 app.get(`/getPlayers`, (req, res) => {
     sql_db.getPlayers(req, res);
 });
+
+app.get(`/getCards`, (req, res) => {
+    sql_db.getCards(req, res);
+})
+
+app.get('/getCardRules', (req, res) => {
+    sql_db.getCardRules(req, res);
+})
 
 /**
  * gets the game and id of a player

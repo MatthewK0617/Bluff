@@ -40,14 +40,14 @@ function getPlayers(req, res) {
             const players = result.map(row => ({
                 name: row.name,
                 id: row.id,
-                socket_id: row.socket_id, 
+                socket_id: row.socket_id,
             }));
             res.send(players);
         }
     });
 }
 
-function getPlayersInGame(req, res) { 
+function getPlayersInGame(req, res) {
     const game = "gd" + req.query.code;
     db.query(`SELECT * FROM ??`, [game], (err, result) => {
         if (err) {
@@ -59,11 +59,50 @@ function getPlayersInGame(req, res) {
                 coins: row.coins,
                 c1: row.card_1,
                 c2: row.card_2,
+                turnOrder: row.turnOrder,
             }));
             // console.log(players);
             res.send(players);
         }
     });
+}
+
+function getCards(req, res) {
+    const cardinfo = "cd" + req.query.code;
+    db.query(`SELECT * FROM ??`, [cardinfo], (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            console.log(result);
+            res.send(result);
+        }
+    })
+}
+
+function getCardRules(req, res) {
+    const cardinfo = "cd" + req.query.code;
+    db.query(`SELECT * FROM ??`, [cardinfo], (err, res_) => {
+        if (err) console.log(err);
+        else {
+            db.query(`SELECT * FROM ??`, ["_card_rules_TEMPLATE"], (err, res__) => {
+                if (err) console.log(err);
+                else {
+                    let cardRules = res__;
+                    console.log(cardinfo);
+                    console.log(res_);
+                    res_.forEach((card, i) => {
+                        if (!card.r1) cardRules[i].desc_r1 == "";
+                        if (!card.r2) cardRules[i].desc_r2 == "";
+                        // if card r1 is false, set the equivalent in cardRules to null
+                    });
+                    console.log(cardRules);
+                    res.send(cardRules);
+                }
+            })
+        }
+    })
+
 }
 
 function getInitialPlayerData(req, res) {
@@ -260,7 +299,7 @@ function joinGame(game_code) {
     return new Promise((resolve, reject) => {
         let game_data = "gd" + game_code;
         // get players and delete players once theyre added to the other db
-    
+
         db.query(`SELECT * FROM current_players WHERE game_code=?`, [game_code], (err, res) => {
             if (err) {
                 console.log(err);
@@ -273,8 +312,8 @@ function joinGame(game_code) {
                 console.log(players[0].name);
                 console.log(res);
                 for (let i = 0; i < players.length; i++) {
-                    db.query(`INSERT INTO ${game_data} (id, username, coins) 
-                    VALUES (?, ?, ?)`, [players[i].id, players[i].name, 2], (err, res_) => {
+                    db.query(`INSERT INTO ${game_data} (id, username, coins, turnOrder) 
+                    VALUES (?, ?, ?, ?)`, [players[i].id, players[i].name, 2, i], (err, res_) => {
                         if (err) console.log(err);
                         else {
                             db.query(`DELETE FROM current_players WHERE id=?`, [players[i].id], (err, res__) => {
@@ -287,7 +326,7 @@ function joinGame(game_code) {
             }
         })
     })
-    
+
 }
 
 module.exports = {
@@ -297,6 +336,8 @@ module.exports = {
     getInitialPlayerData,
     getPlayerData,
     getPlayersInGame,
+    getCards,
+    getCardRules,
     addPlayers,
     updateCardData,
     leaveGame,

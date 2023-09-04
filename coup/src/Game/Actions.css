@@ -20,6 +20,11 @@
     font-size: x-large;
 }
 
+.take-coins-action:hover {
+    border: 0.1rem solid green;
+    font-weight: bold;
+}
+
 .card-base {
     display: flex;
     align-items: center;
@@ -31,8 +36,12 @@
     margin: 0.2rem;
     padding: 0.4rem;
     color: #b5b8c0;
-
     font-size: x-large;
+}
+
+.card-base:hover {
+    border: 0.1rem solid yellow;
+    font-weight: bold;
 }
 
 .card-specific-options {

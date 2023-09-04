@@ -8,19 +8,13 @@ import Actions from "./Actions";
 
 export default function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
     const baseURL = "http://localhost:8000/";
-    // let [coins, setCoins] = useState(2);
     let [cards, setCards] = useState(['a', 'b']);
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);
-    let [action, setAction] = useState(null); // card, id, giverId, coin_transaction, 
-    let [selectedPlayer, setSelectedPlayer] = useState(""); // has to be here because this is where 
-    // the opps are mapped
+    let [isCounter, setIsCounter] = useState(false);
+    let [action, setAction] = useState(null); // card, id, target, coin_transaction, 
     let [selectedArray, setSelectedArray] = useState([false, false, false, false, false, false]);
 
-
-    // Simulate fetching the player count (you can replace this with your actual data fetching logic)
-
-    // load data from before; variables that wont change 
     useEffect(() => {
         const data1 = window.sessionStorage.getItem('code');
         const data2 = parseInt(window.sessionStorage.getItem('id'));
@@ -32,13 +26,10 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
             }
             setCode(code2);
             setId(data2);
-            // setOpps(opps2);
 
             function sortPlayers(res) {
                 let opponents = [];
                 let gameturn = -1;
-                // let playerturn = -2;
-
                 for (const v of res.data) {
                     if (v.id === -1) {
                         gameturn = v.turnOrder;
@@ -49,38 +40,27 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                         if (gameturn === playerturn) setIsTurn(true);
                         else setIsTurn(false);
                         opponents.push(v);
-                    } else {
-                        opponents.unshift(v);
-                    }
-                }
-                setOpps(opponents);
+                    } else opponents.unshift(v);
+                } setOpps(opponents);
             }
 
             Axios.get(`${baseURL}getPlayersInGame`, {
                 params: {
                     code: code2,
                 }
+            }).then((res) => {
+                if (res) sortPlayers(res);
+            }).catch((err) => {
+                console.log(err);
             })
-                .then((res) => {
-                    if (res) {
-                        sortPlayers(res);
-                    }
-                    // IDEA
-                    // iterate through opps and find this player
-                    // update coins with this player
-                })
-                .catch((err) => {
-                    console.log(err);
-                })
         }
     }, [setCode, setId, setOpps, socket, code, id]);
 
-    useEffect(() => { // have to store more information now
+    useEffect(() => {
         setTimeout(() => {
             try {
                 window.sessionStorage.setItem('code', JSON.stringify(code));
                 window.sessionStorage.setItem('id', id);
-                // window.sessionStorage.setItem('opps', JSON.stringify(opps));
             } catch (error) {
                 console.error('Error stringifying code:', error);
             }
@@ -93,47 +73,50 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
      */
     useEffect(() => {
         if (socket) {
-            const handleWhoseTurn = (code, turn_) => {
+            /**
+             * Determines if it is the client's turn.
+             * @param {boolean} turn_ 
+             */
+            const handleWhoseTurn = (turn_) => {
                 if (turn_ === turn) {
                     setIsTurn(true);
-                }
-                else { // will be repetitive. turn will be false before emitting end_turn
+                } else {
                     setIsTurn(false);
                 }
             }
-            // fetching data again (updated server-side)
-            const handleGiveCoins = (receiver_coins, receiverId, giver_coins, giverId) => {
+
+            /**
+             * Handles losing coins to another client. 
+             * rename this and make it the reload for every action.
+             * i.e. ambassador action will call this
+             */
+            const handleAction = () => {
                 Axios.get(`${baseURL}getPlayersInGame`, {
                     params: {
                         code: code,
                     }
-                })
-                    .then((res) => {
-                        console.log("setting opps");
-                        let opponents = [];
-                        res.data.forEach((v, i) => {
-                            if (v.id === -1 || v.id === id) opponents.push(v);
-                            else opponents.unshift(v);
-                        });
-                        setOpps(opponents);
-                    })
-                    .catch((err) => {
-                        console.log(err);
+                }).then((res) => {
+                    let opponents = [];
+                    res.data.forEach((v) => {
+                        if (v.id === -1 || v.id === id) opponents.push(v);
+                        else opponents.unshift(v);
                     });
+                    setOpps(opponents);
+                }).catch((err) => {
+                    console.log(err);
+                });
             };
 
-            // define other functions
+            // finds next turn
             socket.on('next_turn', (code, turn_) => {
-                console.log('turn_: ' + turn_);
-                handleWhoseTurn(code, turn_);
+                handleWhoseTurn(turn_);
             });
-            socket.on('give_coins', handleGiveCoins);
-            // socket.on('ambassador_')
+            socket.on('give_coins', handleAction);
 
             return () => {
-                socket.off('give_coins', handleGiveCoins);
+                socket.off('give_coins', handleAction);
                 socket.off('next_turn', (code, turn) => {
-                    handleWhoseTurn(code, turn);
+                    handleWhoseTurn(turn);
                 });
             };
         }
@@ -154,26 +137,51 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
         }
     };
 
-    const endTurn = () => { 
+    const endTurn = () => {
         console.log(action);
+        if (action.card === "bs") { }
         if (action.card === "def") {
             console.log(action);
-            socket.emit("take_coins", code, action.giverId, id, action.coin_trans);
+            socket.emit("take_coins", code, action.defenderId, id, action.coin_trans);
         }
+        else if (action.card === "duk") {
+            socket.emit("take_coins", code, action.defenderId, id, action.coin_trans);
+        }
+        else if (action.card === "cap") { // && rule === 1 (create rule parameter for object)
+            socket.emit("take_coins", code, action.defenderId, id, action.coin_trans);
+        }
+
         if (turn === opps.length) {
             console.log(turn);
             turn = -1;
         }
-        setIsTurn(false);
+        // setIsTurn(false);
         setAction(null);
         setSelectedArray([false, false, false, false, false, false]);
-        console.log(turn);
-        socket.emit('end_turn', code, turn, opps.length - 1);
+        // console.log(turn);
+
+        // wait for the emit function callback to finish (have to implement that)
+        socket.emit('end_turn', code, action.defenderId, id, turn, opps.length - 1);
     }
+
+    const updateAction = (v) => {
+        console.log(v);
+        setAction(prevAction => ({
+            ...prevAction,
+            defenderId: v.id
+        }));
+    };
 
     return (
         <div className="client-wrapper">
             <div className="players-wrapper">
+                {!isCounter &&
+                    <div className="counter-actions">
+                        <div>Allow</div>
+                        <div>BS</div>
+                    </div>}
+                {/* {!isCounter && <div className="counter-actions">false</div>} */}
+
                 {opps.map((v, i) => {
                     return (
                         <div key={i} className="players">
@@ -184,11 +192,17 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                                     (<div className="nt-game-div">{v.coins}</div>)
                                 :
                                 v.id !== id ?
-                                    isTurn ?
-                                        (<div className="opponents">
-                                            <div className="name">{v.name}</div>
-                                            <div className="coins">{v.coins}</div>
-                                        </div>)
+                                    action ?
+                                        action.defenderId ?
+                                            (<div className="nt-opponents">
+                                                <div className="name">{v.name} {action.defenderId}</div>
+                                                <div className="coins">{v.coins}</div>
+                                            </div>)
+                                            :
+                                            (<div className="opponents" onClick={(_) => updateAction(v)}>
+                                                <div className="name">{v.name}</div>
+                                                <div className="coins">{v.coins}</div>
+                                            </div>)
                                         :
                                         (<div className="nt-opponents">
                                             <div className="name">{v.name}</div>
@@ -228,7 +242,7 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                     )
                 })}
                 {/* if player selected and action is complete */}
-                {action && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
+                {action && action.defenderId && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
                 <div className="usable-cards">
                     <Actions code={code} id={id} action={action} setAction={setAction} isTurn={isTurn} selectedArray={selectedArray} setSelectedArray={setSelectedArray} />
                 </div>
@@ -237,10 +251,3 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
         </div>
     )
 }
-
-/**
- * features left to implement:
- * card tasks (add to same useEffect listener)
- * end game
- * 
- */
