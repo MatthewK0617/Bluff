@@ -38,11 +38,29 @@
     color: #b5b8c0;
     font-size: x-large;
 }
-
 .card-base:hover {
+    /* border: 0.1rem solid yellow; */
+    /* font-weight: bold; */
+}
+
+.card-base-turn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    height: 15vh;
+    width: 10vw;
+    border: 0.1rem solid green;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+    font-size: x-large;
+}
+.card-base-turn:hover {
     border: 0.1rem solid yellow;
     font-weight: bold;
 }
+
 
 .card-specific-options {
     display: flex;

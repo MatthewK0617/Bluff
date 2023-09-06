@@ -1,10 +1,26 @@
 const db = require('../config/db');
 
-function update_game_turn(code, turn) {
-    let game = "gd" + code;
-    db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, turn, -1], (err, res) => {
-        if (err) console.log(err);
-        else console.log(res);
+function update_game_turn(code, player_count) {
+    return new Promise((resolve, reject) => {
+        let game = "gd" + code;
+        db.query(`SELECT turnOrder FROM ?? WHERE id=?`, [game, -1], (err, res) => {
+            if (err) console.log(err);
+            else {
+                console.log(res);
+                let next_turn = res[0].turnOrder + 1;
+                if (player_count === next_turn) next_turn = 0;
+
+                db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, next_turn, -1], (err, res_) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    else {
+                        console.log(res_);
+                        resolve(next_turn);
+                    }
+                })
+            }
+        })
     })
 }
 
@@ -21,8 +37,6 @@ function distribute_cards(code) {
                 players = res[0];
                 player_count = res.length - 1;
                 const ids = res.map(item => item.id).filter(id => id !== -1);
-                // const ids = res.map(item => item.id);
-                // console.log(ids);
 
                 db.query(`SELECT id, num FROM ??`, [cards], (err, res_) => {
                     if (err) console.log(err);
@@ -133,6 +147,18 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
     // return the receiverCoins and giverCoins in an array
 }
 
+function get_player_cards(game, id) {
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT card_1, card_2 FROM ?? WHERE id=?`, [game, id], (err, res) => {
+            if (err) console.log(err);
+            else {
+                resolve(res[0]);
+            }
+        });
+    })
+
+}
+
 function delete_card(receiverId) {
     // implement
 }
@@ -190,5 +216,6 @@ module.exports = {
     update_game_turn,
     distribute_cards,
     coin_transactions,
+    get_player_cards,
     delete_card,
 }

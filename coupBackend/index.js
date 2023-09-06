@@ -4,6 +4,7 @@ const create_game = require('./functions/create_game.js');
 const connections_ = require('./functions/connections.js');
 const clear = require('./functions/clear_games.js');
 const game_actions = require('./functions/game_actions.js');
+const game_actions_handler = require('./functions/game_actions_handler.js');
 
 const express = require("express");
 const app = express();
@@ -65,28 +66,55 @@ io.on("connection", (socket) => {
     //     // io.emit('start_counters');
     // });
 
-    socket.on("end_turn", (code, defender, attacker, turn, player_count) => {
-        let next_turn = turn + 1;
-        if (player_count === next_turn) next_turn = 0;
-        console.log(next_turn);
-        // defender should be able to respond to attacker
-        // io.emit()
-
-        game_actions.update_game_turn(code, next_turn);
-        io.emit("next_turn", code, next_turn);
+    socket.on("end_turn", async (code, action, player_count) => {
+        // emit to enable counters. render client side. update this 
+        console.log(action);
+        await game_actions_handler.handler(io, code, action);
+        if (action.card === "def" && action.rule === 1) {
+            io.of('/').to(code).emit("end_counters");
+            let next_turn = await game_actions.update_game_turn(code, player_count);
+            console.log(next_turn);
+            io.of('/').to(code).emit("next_turn", next_turn);
+        }
+        else {
+            let action2 = { ...action };
+            // action2.id = action.defenderId;
+            // action2.defenderId = action.id;
+            io.of('/').to(code).emit("counters", action2); // will become defender
+        }
     })
 
-    socket.on("take_coins", (code, giverId, receiverId, trans_amount) => { // id represents the one who the action is taken upon
-        let coins = [];
+    socket.on("counter", async (code, action, player_count, v) => {
+        if (v === "allow") {
+            io.of('/').to(code).emit("end_counters");
+            console.log('end_counters emitted');
+            let next_turn = await game_actions.update_game_turn(code, player_count);
+            io.of('/').to(code).emit("next_turn", next_turn);
+            console.log('allowed');
+        }
+        else if (v === "bs") {
+            await game_actions_handler.bs(io, code, action);
+            // io.of('/').to(code).emit("bs_result");
+            console.log("95", action);
 
-        game_actions.coin_transactions(code, giverId, receiverId, trans_amount, (err, res) => {
-            if (err) console.log(err);
-            else {
-                coins = res;
-                console.log(coins);
-                io.emit('give_coins', coins[0], receiverId, coins[1], giverId);
-            }
-        });
+            // DELETE BELOW - JUST FOR TESTING
+            io.of('/').to(code).emit("end_counters");
+            let next_turn = await game_actions.update_game_turn(code, player_count);
+            io.of('/').to(code).emit("next_turn", next_turn);
+        }
+        else {
+            console.log(action);
+            await game_actions_handler.handler(io, code, action);
+
+            // pass in defender and attacker id 
+            // bs should be valid for everyone on the first counter ("bounce" counter between s & c)
+            // subsequent counters should only show the attacker and defender
+            // will have to create counter states to compare
+            let action2 = { ...action };
+            action2.id = action.defenderId;
+            action2.defenderId = action.id;
+            io.of('/').to(code).emit("counters_", action2);
+        }
     })
 
     socket.on("coup", (code, agentId, receiverId, card) => {

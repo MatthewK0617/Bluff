@@ -3,7 +3,7 @@ import Axios from "axios";
 
 import './Actions.css';
 
-export default function Actions({ code, id, action, setAction, isTurn, selectedArray, setSelectedArray }) {
+export default function Actions({ code, id, action, setAction, counterAction, setCounterAction, isTurn, isCounter, selectedArray, setSelectedArray }) {
     const baseURL = "http://localhost:8000/";
     const [cards, setCards] = useState([]);
     let [actionsRules, setActionsRules] = useState([]);
@@ -50,11 +50,7 @@ export default function Actions({ code, id, action, setAction, isTurn, selectedA
     }, [code]);
 
     const toggleActionRules = (action_name) => {
-        console.log(action_name);
-        // setSelectedAction(action_name); // do i need this state?
-
         const newSelectedArray = [false, false, false, false, false, false];
-
         if (action_name === "coins") {
             newSelectedArray[0] = !selectedArray[0];
         } else if (action_name === "amb") {
@@ -63,7 +59,6 @@ export default function Actions({ code, id, action, setAction, isTurn, selectedA
             newSelectedArray[2] = !selectedArray[2];
         } else if (action_name === "cap") {
             newSelectedArray[3] = !selectedArray[3];
-            console.log(actionsRules);
         } else if (action_name === "con") {
             newSelectedArray[4] = !selectedArray[4];
         } else if (action_name === "duk") {
@@ -74,59 +69,42 @@ export default function Actions({ code, id, action, setAction, isTurn, selectedA
     }
 
     const actionHandler = (card, rule) => { // maybe change this to primary action
-        if (card === "def") rule === 1 ? def(-1, 1) : def(-1, 2);
+        if (card === "def") actionCreator("def", rule, -1);
         else if (card === "amb") { }
         else if (card === "ass") { }
-        else if (card === "cap") cap(rule);
+        else if (card === "cap") actionCreator("cap", rule, null); // null will change in selectplayer
         else if (card === "con") { }
-        else if (card === "duk") duk(rule);
+        else if (card === "duk") rule === 1 ? actionCreator("duk", rule, -1) : actionCreator("duk", rule, null);
     }
 
-    const def = (defender, transaction) => {
-        takeCoins("def", defender, transaction);
-    }
-
-    /**
-     * params: 
-     * 
-     */
-    const amb = () => { }
-
-    const cap = (rule) => {
-        if (rule === 1) {
-            takeCoins("cap", null, 2);
-            console.log("here");
-        }
-    }
-
-    const duk = (rule) => {
-        if (rule === 1) takeCoins("duk", -1, 3);
-        else if (rule === 2) {
-            // should only be able to be selected on block
-        }
-    }
-
-    const takeCoins = (card, defenderId, coin_trans) => {
+    const actionCreator = (card, rule, defenderId) => {
         // toggling actions on and off
         if (action !== null) {
             setAction(null);
             return;
         }
-        console.log("clicked");
+        // creating action object
         let actionObj = {
             card: card,
+            rule: rule,
             id: id,
             defenderId: defenderId,
-            coin_trans: coin_trans,
         }
-        setAction(actionObj);
+        // updating action state
+        if (rule === 1 || card === "def") setAction(actionObj);
+        else {
+            console.log(counterAction);
+            actionObj.defenderId = counterAction.defenderId;
+            setCounterAction(actionObj);
+        }
+        console.log(actionObj);
     }
 
     return (
         <div>
             <div className="actions-wrapper">
                 {/* {isTurn &&
-                    <div className="take-coins-action" onClick={(_) => takeCoins(-1, 2)}>
+                    <div className="take-coins-action" onClick={(_) => actionCreator(-1, 2)}>
                         Coins
                     </div>
                 } */}
@@ -142,7 +120,7 @@ export default function Actions({ code, id, action, setAction, isTurn, selectedA
                 }
                 {cards.map((v, i) => {
                     return (
-                        <div key={i} className="card-base" onClick={(_) => toggleActionRules(v.id)}>
+                        <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
                             {v.id}
                         </div>
                     )
@@ -153,16 +131,25 @@ export default function Actions({ code, id, action, setAction, isTurn, selectedA
                         v && <div key={i} className="card-specific-options">
                             <div>{actionsRules[i].type}</div>
 
-                            {actionsRules[i].desc_r1 !== "" && (
+                            {!isCounter && actionsRules[i].desc_r1 !== "" && (
                                 <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : undefined}>
                                     {actionsRules[i].desc_r1}
                                 </div>
                             )}
-                            {actionsRules[i].desc_r2 !== "" && (
-                                <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : undefined}>
-                                    {actionsRules[i].desc_r2}
-                                </div>
-                            )}
+                            {actionsRules[i].type === "def" ?
+                                (actionsRules[i].desc_r2 !== "" && (
+                                    <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : undefined}>
+                                        {actionsRules[i].desc_r2}
+                                    </div>
+                                )
+                                ) :
+                                (isCounter && actionsRules[i].desc_r2 !== "" && (
+                                    <div onClick={() => actionHandler(actionsRules[i].type, 2)}>
+                                        {actionsRules[i].desc_r2}
+                                    </div>
+                                )
+                                )
+                            }
                         </div>
                         // </div>
                     )
