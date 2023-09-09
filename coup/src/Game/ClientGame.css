@@ -207,13 +207,23 @@ html {
     justify-content: flex-start;
     /* margin: 0.2rem; */
 }
-
 .card {
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: #000000;
     border: 0.1rem solid #fffff0;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+}
+
+.card-lose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    border: 0.1rem solid red;
     margin: 0.2rem;
     padding: 0.4rem;
     color: #b5b8c0;

@@ -98,9 +98,9 @@ io.on("connection", (socket) => {
             console.log("95", action);
 
             // DELETE BELOW - JUST FOR TESTING
-            io.of('/').to(code).emit("end_counters");
-            let next_turn = await game_actions.update_game_turn(code, player_count);
-            io.of('/').to(code).emit("next_turn", next_turn);
+            // io.of('/').to(code).emit("end_counters");
+            // let next_turn = await game_actions.update_game_turn(code, player_count);
+            // io.of('/').to(code).emit("next_turn", next_turn);
         }
         else {
             console.log(action);
@@ -115,6 +115,16 @@ io.on("connection", (socket) => {
             action2.defenderId = action.id;
             io.of('/').to(code).emit("counters_", action2);
         }
+    })
+
+    socket.on("continue", async(code, player_count) => {
+        io.of('/').to(code).emit("end_counters");
+        let next_turn = await game_actions.update_game_turn(code, player_count);
+        io.of('/').to(code).emit("next_turn", next_turn);
+    })
+
+    socket.on("delete_card", (code, id, card, callback) => {
+        game_actions.delete_card(code, id, card, callback);
     })
 
     socket.on("coup", (code, agentId, receiverId, card) => {
@@ -165,10 +175,7 @@ io.on("connection", (socket) => {
         // emit
     })
 
-    socket.on("challenge", (code, agentId, card) => {
-        // lose card if opponent has card
-        // otherwise, opponent loses card
-    })
+    
 });
 
 /**

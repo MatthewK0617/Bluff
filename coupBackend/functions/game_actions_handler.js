@@ -69,22 +69,15 @@ async function bs(io, code, action) {
     action2.defenderId = action.id;
     console.log(cards);
     return new Promise((resolve, reject) => {
-
+        // bs is right
+        // undo the last action
+        // * call the handler and reverse ids
         if (cards.card_1 === action.card || cards.card_2 === action.card) {
-            // the bs call is wrong
-            // the player who called bs should lose a card
+            io.emit('challenge_results', action2.id);
         } else {
-            // the bs call is right
-            // the player who
+            // bs is wrong
+            io.emit('challenge_results', action2.defenderId);
         }
-
-        // if the player who calls bs (the attacker) 
-        // calls bs correctly, then defender loses a card
-        // otherwise, attacker loses a card
-
-
-        // bs is called correctly if defender doesn't actually have the card
-        // obtain defender cards
         resolve(action);
     });
 }

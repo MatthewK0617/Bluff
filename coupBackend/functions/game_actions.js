@@ -26,7 +26,6 @@ function update_game_turn(code, player_count) {
 
 function distribute_cards(code) {
     return new Promise((resolve, reject) => {
-        // need code, thats it?
         let game = "gd" + code;
         let cards = "cd" + code;
         let player_count = 0;
@@ -48,6 +47,7 @@ function distribute_cards(code) {
                             let card = { id: res_[i].id, count: parseInt(res_[i].num) };
                             deck.push(card);
                         }
+                        console.log("deck", deck);
                         // fill with strings containing card identifiers
                         let initial_cards_in_play = player_count * 2; // make this scalable
                         let selected_cards = [];
@@ -55,7 +55,7 @@ function distribute_cards(code) {
                         for (let i = 1; i < deck.length; i++) {
                             card_sums.push(deck[i].count + card_sums[i - 1]);
                         }
-                        // console.log(card_sums);
+                        console.log(card_sums);
 
                         for (let i = 0; i < player_count; i++) {
                             let v = -1;
@@ -84,6 +84,7 @@ function distribute_cards(code) {
                                 for (let k = v; k < card_sums.length; k++) { // v + 1
                                     card_sums[k]--;
                                 }
+                                deck[v].count--;
                                 deck_count--;
                                 selected_cards.push(deck[v].id);
                                 console.log(selected_cards);
@@ -92,11 +93,19 @@ function distribute_cards(code) {
                             db.query(`UPDATE ?? SET card_1=?, card_2=? WHERE id=?`, [game, selected_cards[i * 2], selected_cards[i * 2 + 1], ids[i]], (err, res__) => { // UPDATE PLAYER CARDS
                                 if (err) reject();
                                 else {
+                                    console.log(res__);
+                                }
+                            })
+                        }
+                        for (let i = 0; i < deck.length; i++) {
+                            db.query(`UPDATE ?? SET num=? WHERE id=?`, [cards, deck[i].count, deck[i].id], (err, res) => {
+                                if (err) console.log(err);
+                                else {
+                                    console.log(res);
                                     resolve();
                                 }
                             })
                         }
-
                     }
                 })
             }
@@ -159,8 +168,32 @@ function get_player_cards(game, id) {
 
 }
 
-function delete_card(receiverId) {
-    // implement
+async function delete_card(code, id, card, callback) {
+    let game = "gd" + code;
+    let card_game = "cd" + code;
+    let cards = await get_player_cards(game, id);
+    let card_index = cards.card_1 === card ? 1 : 2;
+
+    db.query(`UPDATE ?? SET card_${card_index}=? WHERE id=?`, [game, null, id], (err, res) => {
+        if (err) console.log(err);
+        else {
+            // add card back to pile
+            db.query(`SELECT num FROM ?? WHERE id=?`, [card_game, card], (err, res_) => {
+                if (err) console.log(err);
+                else {
+                    let num_in_deck = res_[0].num;
+                    console.log(num_in_deck);
+                    db.query(`UPDATE ?? SET num=? WHERE id=?`, [card_game, num_in_deck + 1, card], (err, res__) => {
+                        if (err) console.log(err);
+                        else {
+                            console.log(res__);
+                            callback("completed");
+                        }
+                    })
+                }
+            })
+        }
+    });
 }
 
 /**
