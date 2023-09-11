@@ -85,39 +85,37 @@ io.on("connection", (socket) => {
     })
 
     socket.on("counter", async (code, action, player_count, v) => {
+        io.emit("set-countering-players", action.id, action.defenderId);
         if (v === "allow") {
-            io.of('/').to(code).emit("end_counters");
-            console.log('end_counters emitted');
-            let next_turn = await game_actions.update_game_turn(code, player_count);
-            io.of('/').to(code).emit("next_turn", next_turn);
-            console.log('allowed');
+            if (action.card !== "ass") {
+                io.of('/').to(code).emit("end_counters");
+                console.log('end_counters emitted');
+                let next_turn = await game_actions.update_game_turn(code, player_count);
+                io.of('/').to(code).emit("next_turn", next_turn);
+            }
+            else {
+                // should emit a new message (i.e. coup that does the exact same thing)
+                socket.emit("challenge_results", action.defenderId);
+            }
         }
         else if (v === "bs") {
             await game_actions_handler.bs(io, code, action);
-            // io.of('/').to(code).emit("bs_result");
-            console.log("95", action);
-
-            // DELETE BELOW - JUST FOR TESTING
-            // io.of('/').to(code).emit("end_counters");
-            // let next_turn = await game_actions.update_game_turn(code, player_count);
-            // io.of('/').to(code).emit("next_turn", next_turn);
         }
-        else {
-            console.log(action);
-            await game_actions_handler.handler(io, code, action);
-
-            // pass in defender and attacker id 
-            // bs should be valid for everyone on the first counter ("bounce" counter between s & c)
-            // subsequent counters should only show the attacker and defender
-            // will have to create counter states to compare
-            let action2 = { ...action };
-            action2.id = action.defenderId;
-            action2.defenderId = action.id;
-            io.of('/').to(code).emit("counters_", action2);
-        }
+        // else {
+        //     if (action.card === "con") {
+        //         // dont need to do anything
+        //         // socket.emit("block_3coup");
+        //     }
+        //     await game_actions_handler.handler(io, code, action);
+        //     // subsequent counters should only show the attacker and defender
+        //     let action2 = { ...action };
+        //     action2.id = action.defenderId;
+        //     action2.defenderId = action.id;
+        //     io.of('/').to(code).emit("counters_", action2);
+        // }
     })
 
-    socket.on("continue", async(code, player_count) => {
+    socket.on("continue", async (code, player_count) => {
         io.of('/').to(code).emit("end_counters");
         let next_turn = await game_actions.update_game_turn(code, player_count);
         io.of('/').to(code).emit("next_turn", next_turn);
@@ -125,6 +123,12 @@ io.on("connection", (socket) => {
 
     socket.on("delete_card", (code, id, card, callback) => {
         game_actions.delete_card(code, id, card, callback);
+    })
+
+    socket.on("eliminated", async (code, id, eliminated_turn) => {
+        const winner = await game_actions.eliminated(code, id, eliminated_turn);
+        console.log("winner", winner);
+        if (winner) io.emit("game_over", winner);
     })
 
     socket.on("coup", (code, agentId, receiverId, card) => {
@@ -175,7 +179,7 @@ io.on("connection", (socket) => {
         // emit
     })
 
-    
+
 });
 
 /**

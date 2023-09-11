@@ -24,7 +24,7 @@ function createGame(io, req, res) {
         }
     })
 
-    db.query(`INSERT INTO current_games (code, player_count) VALUES ('${code}', 1)`, (err, result) => {
+    db.query(`INSERT INTO current_games (code, player_count, playing) VALUES ('${code}', 1, 1)`, (err, result) => {
         if (err) {
             console.log(err);
         }

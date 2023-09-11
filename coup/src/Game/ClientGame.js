@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Axios from 'axios';
 
 import './ClientGame.css';
 import Actions from "./Actions";
+import EndPage from "./EndPage";
 
-export default function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
+function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
     const baseURL = "http://localhost:8000/";
     let [cards, setCards] = useState(['_', '_']);
     let [turn, setTurn] = useState(-2);
@@ -15,6 +16,8 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
     let [action, setAction] = useState(null);
     let [loseCard, setLoseCard] = useState(false);
     let [selectedArray, setSelectedArray] = useState([false, false, false, false, false, false]);
+    let [fetch, setFetch] = useState(false);
+    let [winner, setWinner] = useState("");
 
     /**
      * Load from local storage and update from db if necessary.
@@ -23,7 +26,10 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
         const data1 = window.sessionStorage.getItem('code');
         const data2 = parseInt(window.sessionStorage.getItem('id'));
         const data3 = window.sessionStorage.getItem('lastAction');
+        const data4 = window.sessionStorage.getItem('winner');
+
         if (data3) setLastAction(JSON.parse(data3));
+        if (data4) setWinner(JSON.parse(data4));
         if (data1 && data2) {
             const code2 = JSON.parse(data1);
             if (socket) socket.emit("reconnected", code2);
@@ -75,75 +81,63 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
      * Handles functions
      */
     useEffect(() => {
-        if (socket) {
+        /**
+         * Fetches new game data. 
+         */
 
-            /**
-            * Fetches new game data. 
-            */
-            const FetchUpdates = () => {
-                Axios.get(`${baseURL}getPlayersInGame`, {
-                    params: {
-                        code: code,
-                    }
-                }).then((res) => {
-                    let opponents = [];
-                    res.data.forEach((v) => {
-                        if (v.id === -1) {
-                            opponents.push(v);
-                        } else if (v.id === id) {
-                            opponents.push(v);
-                            setCards([v.c1, v.c2]);
-                        } else opponents.unshift(v);
-                    });
-                    setOpps(opponents);
-                }).catch((err) => {
-                    console.log(err);
-                });
-            };
+        /**
+         * Determines if it is the client's turn.
+         * @param {boolean} turn_ 
+         */
+        const handleWhoseTurn = (turn_) => {
+            if (turn_ === turn) setIsTurn(true);
+            else setIsTurn(false);
+        }
 
-            /**
-             * Determines if it is the client's turn.
-             * @param {boolean} turn_ 
-             */
-            const handleWhoseTurn = (turn_) => {
-                if (turn_ === turn) setIsTurn(true);
-                else setIsTurn(false);
-            }
+        /**
+         * Handles the initial attack.
+         * @param {*} A attack object
+         */
+        const handleAttack = (A) => {
+            setIsCounter(true);
+            setLastAction(A);
+            // if (A.defenderId !== id && A.id !== id) setIsCounter(false);
+            setCounterAction(prevAction => ({
+                ...prevAction,
+                defenderId: A.id,
+                id: A.defender,
+            }));
+        }
 
-            /**
-             * Handles the initial attack.
-             * @param {*} A attack object
-             */
-            const handleAttack = (A) => {
+        /**
+         * Handles subsequent attacks (i.e. counters). 
+         * @param {*} d defender id
+         * @param {*} a attacker id
+         */
+        const handleSubsequentAttacks = (d, a) => {
+            if (id === d) {
                 setIsCounter(true);
-                setLastAction(A);
                 setCounterAction(prevAction => ({
                     ...prevAction,
-                    defenderId: A.id,
-                    id: A.defender,
+                    defenderId: d,
                 }));
-            }
+            } else setIsCounter(false);
+        }
 
-            /**
-             * Handles subsequent attacks (i.e. counters). 
-             * @param {*} d defender id
-             * @param {*} a attacker id
-             */
-            const handleSubsequentAttacks = (d, a) => {
-                if (id === d) {
-                    setIsCounter(true);
-                    setCounterAction(prevAction => ({
-                        ...prevAction,
-                        defenderId: d,
-                    }));
-                } else setIsCounter(false);
-            }
-
+        if (socket) {
             // listens for next turn
             socket.on('next_turn', (turn_) => {
                 handleWhoseTurn(turn_);
-                FetchUpdates();
+                setFetch(!fetch);
             });
+
+            socket.on('con_bluff_called', (defenderId) => {
+                socket.emit("eliminated", code, defenderId, turn);
+            })
+
+            socket.on('set-countering-players', (p1, p2) => {
+                if (id !== p1 || id !== p2) setIsCounter(false);
+            })
 
             // determine who will lose their card
             socket.on('challenge_results', (loserId) => {
@@ -154,14 +148,20 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
 
             // handling first counter
             socket.on('counters', (_action) => {
+                console.log("handleAction");
                 handleAttack(_action);
             });
 
             // // handling subsequent counters
-            socket.on('counters_', (_lastAction) => {
-                setLastAction(_lastAction);
-                handleSubsequentAttacks(_lastAction.defenderId, _lastAction.id);
-            });
+            // socket.on('counters_', (_lastAction) => {
+            //     console.log(_lastAction);
+            //     if (id !== _lastAction.id && id !== _lastAction.defenderId) {
+            //         console.log("not countering");
+            //         setIsCounter(false);
+            //     }
+            //     setLastAction(_lastAction);
+            //     handleSubsequentAttacks(_lastAction.defenderId, _lastAction.id);
+            // });
 
             // end counter interactions; begin true next turn
             socket.on('end_counters', () => {
@@ -169,31 +169,88 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
                 setCounterAction(null);
                 setIsCounter(false);
                 setLoseCard(false);
-                FetchUpdates();
+                setFetch(!fetch);
             })
 
             return () => {
+                // listens for next turn
                 socket.off('next_turn', (turn_) => {
                     handleWhoseTurn(turn_);
+                    setFetch(!fetch);
                 });
-                socket.off('counters', (d) => {
-                    handleAttack(d);
+
+                socket.off('con_bluff_called', (defenderId) => {
+                    socket.emit("eliminated", code, defenderId, turn);
+                })
+
+                // determine who will lose their card
+                socket.off('challenge_results', (loserId) => {
+                    if (id === loserId) {
+                        setLoseCard(true);
+                    }
+                })
+
+                // handling first counter --> handling counters
+                socket.off('counters', (_action) => {
+                    handleAttack(_action);
                 });
-                socket.off('counters_', (lastA) => {
-                    console.log(lastA);
-                    setLastAction(lastA);
-                    handleSubsequentAttacks(lastA.defenderId, lastA.id);
-                });
+
+                // // handling subsequent counters
+                // socket.off('counters_', (_lastAction) => {
+                //     setLastAction(_lastAction);
+                //     handleSubsequentAttacks(_lastAction.defenderId, _lastAction.id);
+                // });
+
+                // end counter interactions; begin true next turn
                 socket.off('end_counters', () => {
                     setSelectedArray([false, false, false, false, false, false]);
                     setCounterAction(null);
                     setIsCounter(false);
                     setLoseCard(false);
-                    FetchUpdates();
+                    setFetch(!fetch);
+
                 })
             };
         }
-    }, [socket, code, id, setOpps, opps, turn, counterAction]);
+    });
+    // }, [handleEndCounters, socket]);
+
+    const FetchData = useCallback(() => {
+        if (code) {
+            Axios.get(`${baseURL}getPlayersInGame`, {
+                params: {
+                    code: code,
+                }
+            }).then((res) => {
+                let opponents = [];
+                let gameturn = -1;
+                console.log('why');
+                res.data.forEach((v) => {
+                    if (v.id === -1) {
+                        gameturn = v.turnOrder;
+                        opponents.push(v);
+                    } else if (v.id === id) {
+                        opponents.push(v);
+                        setCards([v.c1, v.c2]);
+                        setTurn((prevTurn) => {
+                            // Calculate the new 'turn' based on 'prevTurn' and 'v.turnOrder'
+                            return v.turnOrder !== prevTurn ? v.turnOrder : prevTurn;
+                        });
+                        if (gameturn === v.turnOrder) setIsTurn(true);
+                        else setIsTurn(false);
+                    } else opponents.unshift(v);
+                });
+                setOpps(opponents);
+            }).catch((err) => {
+                console.log(err);
+            });
+        }
+    }, [code, id, setOpps]);
+
+    useEffect(() => {
+        FetchData();
+        console.log("fetched");
+    }, [FetchData, fetch])
 
     const handleLeaveInGame = async () => {
         try {
@@ -215,12 +272,13 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
             socket.emit("counter", code, lastAction, opps.length - 1, v);
         }
         else if (v === "allow") {
-            socket.emit("counter", code, action, opps.length - 1, v);
+            console.log(lastAction);
+            socket.emit("counter", code, lastAction, opps.length - 1, v);
         }
     }
 
     const updateAction = (v) => {
-        console.log(v);
+        // console.log(v);
         setAction(prevAction => ({
             ...prevAction,
             defenderId: v.id
@@ -244,85 +302,118 @@ export default function ClientGame({ code, setCode, id, setId, opps, setOpps, so
      * Notifies server to delete the selected card.
      * @param {String} card name of card
      */
-    const deleteCard = (card) => {
-        socket.emit("delete_card", code, id, card, (response) => {
-            console.log(response);
-            socket.emit("continue", code, opps.length - 1);
+    const deleteCard = async (card) => {
+        // Create a promise to handle the asynchronous operation
+        const eliminationPromise = new Promise((resolve, reject) => {
+            if (!cards[0] || !cards[1]) {
+                socket.emit("eliminated", code, id, turn);
+                resolve(true);
+            } else {
+                resolve();
+            }
         });
+        let eliminated = await eliminationPromise;
+        if (!eliminated) {
+            socket.emit("delete_card", code, id, card, (response) => {
+                console.log(response);
+                socket.emit("continue", code, opps.length - 1);
+            });
+        }
     }
 
+
+    useEffect(() => {
+        if (socket) {
+            socket.on("game_over", (winner_) => {
+                setWinner(winner_);
+                console.log(winner_);
+            });
+        }
+    }, [socket, id])
+
+    useEffect(() => {
+        if (winner) {
+            console.log(winner);
+            window.sessionStorage.setItem('winner', JSON.stringify(winner));
+        }
+    }, [winner])
+
     return (
+        // (!winner &&
         <div className="client-wrapper">
-            <div className="players-wrapper">
-                {isCounter && counterAction && counterAction.defenderId !== id &&
-                    <div className="counter-actions">
-                        <div onClick={(_) => sendCounters("allow")}>Allow</div>
-                        <div onClick={(_) => sendCounters("bs")}>BS</div>
-                        <div>{isCounter ? 1 : 0} {counterAction.defenderId}</div>
+            {!winner &&
+                <div className="players-wrapper">
+                    {turn !== -2 && isCounter && counterAction && counterAction.defenderId !== id &&
+                        <div className="counter-actions">
+                            <div onClick={(_) => sendCounters("allow")}>Allow</div>
+                            <div onClick={(_) => sendCounters("bs")}>BS</div>
+                        </div>}
 
-                    </div>}
-
-                {opps.map((v, i) => {
-                    return (
-                        <div key={i} className="players">
-                            {v.id === -1 ?
-                                isTurn ?
-                                    (<div className="game-div">{v.coins}</div>) // should be when card is selected
+                    {opps.map((v, i) => {
+                        return (
+                            <div key={i} className="players">
+                                {v.id === -1 ?
+                                    isTurn ?
+                                        (<div className="game-div">{v.coins}</div>) // should be when card is selected
+                                        :
+                                        (<div className="nt-game-div">{v.coins}</div>)
                                     :
-                                    (<div className="nt-game-div">{v.coins}</div>)
-                                :
-                                v.id !== id ?
-                                    (action && !isCounter) ?
-                                        action.defenderId ?
+                                    v.id !== id ?
+                                        (action && !isCounter) ?
+                                            action.defenderId ?
+                                                (<div className="nt-opponents">
+                                                    <div className="name">{v.name}</div>
+                                                    <div className="coins">{v.coins}</div>
+                                                </div>)
+                                                :
+                                                (<div className="opponents" onClick={(_) => updateAction(v)}>
+                                                    <div className="name">{v.name}</div>
+                                                    <div className="coins">{v.coins}</div>
+                                                </div>)
+                                            :
                                             (<div className="nt-opponents">
                                                 <div className="name">{v.name}</div>
                                                 <div className="coins">{v.coins}</div>
                                             </div>)
-                                            :
-                                            (<div className="opponents" onClick={(_) => updateAction(v)}>
-                                                <div className="name">{v.name}</div>
-                                                <div className="coins">{v.coins}</div>
-                                            </div>)
                                         :
-                                        (<div className="nt-opponents">
+                                        (<div className="player">
                                             <div className="name">{v.name}</div>
-                                            <div className="coins">{v.coins}</div>
-                                        </div>)
-                                    :
-                                    (<div className="player">
-                                        <div className="name">{v.name}</div>
-                                        <div className="coin-card-wrapper">
-                                            <div className="coins">{v.coins}</div>
-                                            <div className="cards">
-                                                {cards.map((v, i) => {
-                                                    return (
-                                                        v &&
-                                                        <div key={i} className={`${loseCard ? 'card-lose' : 'card'}`}
-                                                            onClick={loseCard ? (_) => deleteCard(v) : undefined}
-                                                        >{v}</div>
-                                                    )
-                                                })}
+                                            <div className="coin-card-wrapper">
+                                                <div className="coins">{v.coins}</div>
+                                                <div className="cards">
+                                                    {cards.map((v, i) => {
+                                                        return (
+                                                            v &&
+                                                            <div key={i} className={`${loseCard ? 'card-lose' : 'card'}`}
+                                                                onClick={loseCard ? (_) => deleteCard(v) : undefined}
+                                                            >{v}</div>
+                                                        )
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>)
-                            }
-                        </div>
-                    )
-                })}
-                {/* if counter player selected and counter is complete player selected and action is complete */}
-                {(isCounter && counterAction && counterAction.card)
-                    && <div className="end-turn" onClick={(_) => endTurn()}>End Counter</div>}
+                                        </div>)
+                                }
+                            </div>
+                        )
+                    })}
+                    {/* if counter player selected and counter is complete player selected and action is complete */}
+                    {(isCounter && counterAction && counterAction.card)
+                        && <div className="end-turn" onClick={(_) => endTurn()}>End Counter</div>}
 
-                {(action && action.defenderId)
-                    && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
-                <div className="usable-cards">
-                    <Actions code={code} id={id} action={action} setAction={setAction}
-                        counterAction={counterAction} setCounterAction={setCounterAction}
-                        isTurn={isTurn} isCounter={isCounter} selectedArray={selectedArray}
-                        setSelectedArray={setSelectedArray} />
+                    {(action && action.defenderId)
+                        && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
+                    <div className="usable-cards">
+                        <Actions code={code} id={id} action={action} setAction={setAction}
+                            counterAction={counterAction} setCounterAction={setCounterAction}
+                            isTurn={isTurn} isCounter={isCounter} selectedArray={selectedArray}
+                            setSelectedArray={setSelectedArray} />
+                    </div>
                 </div>
-            </div>
+            }
+            {winner && <EndPage winner={winner} code={code} id={id} />}
             <div className="leave-button" onClick={(_) => handleLeaveInGame()}> Leave Game </div>
         </div >
     )
 }
+
+export default ClientGame;

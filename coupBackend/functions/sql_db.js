@@ -11,7 +11,7 @@ function getGames(req, res) {
             res.send(result);
         }
     });
-    console.log('finished');
+    // console.log('finished');
 }
 
 function getPlayersSocket(code, id, callback) {
@@ -25,7 +25,7 @@ function getPlayersSocket(code, id, callback) {
                 id: row.id,
                 socket_id: row.socket_id
             }));
-            console.log(players);
+            // console.log(players);
             callback(null, players);
         }
     });
@@ -61,7 +61,7 @@ function getPlayersInGame(req, res) {
                 c2: row.card_2,
                 turnOrder: row.turnOrder,
             }));
-            // console.log(players);
+            console.log("g1");
             res.send(players);
         }
     });
@@ -74,7 +74,7 @@ function getCards(req, res) {
             console.log(err);
         }
         else {
-            console.log(result);
+            // console.log(result);
             res.send(result);
         }
     })
@@ -89,14 +89,14 @@ function getCardRules(req, res) {
                 if (err) console.log(err);
                 else {
                     let cardRules = res__;
-                    console.log(cardinfo);
-                    console.log(res_);
+                    // console.log(cardinfo);
+                    // console.log(res_);
                     res_.forEach((card, i) => {
                         if (!card.r1) cardRules[i].desc_r1 == "";
                         if (!card.r2) cardRules[i].desc_r2 == "";
                         // if card r1 is false, set the equivalent in cardRules to null
                     });
-                    console.log(cardRules);
+                    // console.log(cardRules);
                     res.send(cardRules);
                 }
             })
@@ -112,8 +112,8 @@ function getInitialPlayerData(req, res) {
             console.log(err);
             res.status(500).send('An error occurred');
         } else {
-            console.log(socket_id);
-            console.log(result);
+            // console.log(socket_id);
+            // console.log(result);
             if (result.length > 0) {
                 const playerData = {
                     game_code: result[0].game_code,
@@ -161,7 +161,7 @@ function addPlayers(app, req, res) {
             count = res[0].player_count;
             count = count + 1;
 
-            db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, res) => {
+            db.query(`UPDATE current_games SET player_count=?, playing=? WHERE code=?`, [count, count, code], (err, res) => {
                 if (err) {
                     console.log(err);
                 }
@@ -193,7 +193,7 @@ function leaveGame(req, res1) {
     let code = req.body.code;
     let id = req.body.id;
     let count = 0;
-    console.log(id);
+    // console.log(id);
 
     db.query(`DELETE FROM current_players WHERE id=?`, [id], (err, result) => {
         if (err) {
@@ -202,15 +202,15 @@ function leaveGame(req, res1) {
 
         if (code !== "") {
             db.query(`SELECT player_count FROM current_games WHERE code=?`, [code], (err, res) => {
-                console.log("code: " + code);
-                console.log(res);
+                // console.log("code: " + code);
+                // console.log(res);
                 if (err) {
                     console.log(err);
                 } else {
                     console.log(res);
                     count = res[0].player_count;
                     count = count - 1;
-                    console.log(count);
+                    // console.log(count);
 
                     db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, result) => {
                         if (err) {
@@ -254,38 +254,38 @@ function leaveInGame(req, res1) {
         }
 
         if (code !== "") {
-            db.query(`SELECT player_count FROM current_games WHERE code=?`, [code], (err, res) => {
-                console.log("code: " + code);
-                console.log(res);
+            db.query(`SELECT player_count, playing FROM current_games WHERE code=?`, [code], (err, res) => {
+                // console.log("code: " + code);
+                // console.log(res);
                 if (err) {
                     console.log(err);
                 } else {
-                    console.log(res);
-                    count = res[0].player_count;
-                    count = count - 1;
-                    console.log(count);
+                    // console.log(res);
+                    count = res[0].player_count-1;
+                    playing = res[0].playing-1;
 
-                    db.query(`UPDATE current_games SET player_count=? WHERE code=?`, [count, code], (err, result) => {
+                    db.query(`UPDATE current_games SET player_count=?, playing=? WHERE code=?`, [count, playing, code], (err, result) => {
                         if (err) {
                             console.log(err);
                         }
+                        else {
+                            if (count === 0) {
+                                db.query(`DELETE FROM current_games WHERE code=?`, [code], (err, result) => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                });
 
-                        if (count === 0) {
-                            db.query(`DELETE FROM current_games WHERE player_count=0`, (err, result) => {
-                                if (err) {
-                                    console.log(err);
-                                }
-                            });
-
-                            let card_data = "cd" + code;
-                            db.query(`DROP TABLE ??`, [card_data], (err, result) => {
-                                if (err) console.log(err);
-                                else {
-                                    db.query(`DROP TABLE ??`, [game_data], (err, result) => {
-                                        if (err) console.log(err);
-                                    });
-                                }
-                            });
+                                let card_data = "cd" + code;
+                                db.query(`DROP TABLE ??`, [card_data], (err, result) => {
+                                    if (err) console.log(err);
+                                    else {
+                                        db.query(`DROP TABLE ??`, [game_data], (err, result) => {
+                                            if (err) console.log(err);
+                                        });
+                                    }
+                                });
+                            }
                         }
                     });
                 }
@@ -309,8 +309,8 @@ function joinGame(game_code) {
                     name: row.name,
                     id: row.id,
                 }));
-                console.log(players[0].name);
-                console.log(res);
+                // console.log(players[0].name);
+                // console.log(res);
                 for (let i = 0; i < players.length; i++) {
                     db.query(`INSERT INTO ${game_data} (id, username, coins, turnOrder, countering) 
                     VALUES (?, ?, ?, ?, ?)`, [players[i].id, players[i].name, 100, i, 0], (err, res_) => {

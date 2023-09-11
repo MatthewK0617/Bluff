@@ -71,9 +71,9 @@ export default function Actions({ code, id, action, setAction, counterAction, se
     const actionHandler = (card, rule) => { // maybe change this to primary action
         if (card === "def") actionCreator("def", rule, -1);
         else if (card === "amb") { }
-        else if (card === "ass") { }
+        else if (card === "ass") actionCreator("ass", rule, null);
         else if (card === "cap") actionCreator("cap", rule, null); // null will change in selectplayer
-        else if (card === "con") { }
+        else if (card === "con") { actionCreator("con", rule, null); }
         else if (card === "duk") rule === 1 ? actionCreator("duk", rule, -1) : actionCreator("duk", rule, null);
     }
 
@@ -91,7 +91,11 @@ export default function Actions({ code, id, action, setAction, counterAction, se
             defenderId: defenderId,
         }
         // updating action state
-        if (rule === 1 || card === "def") setAction(actionObj);
+        console.log(actionObj);
+
+        if (rule === 1 || card === "def") {
+            setAction(actionObj);
+        }
         else {
             console.log(counterAction);
             actionObj.defenderId = counterAction.defenderId;
@@ -120,16 +124,17 @@ export default function Actions({ code, id, action, setAction, counterAction, se
                 }
                 {cards.map((v, i) => {
                     return (
-                        <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
+                        // implement amb later 
+                        i !== 0 && <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
                             {v.id}
                         </div>
                     )
                 })}
                 {selectedArray.map((v, i) => {
                     return (
-                        // <div key={i} className="card-specific-options">
+                        // flip the card over to see the actions you can take
                         v && <div key={i} className="card-specific-options">
-                            <div>{actionsRules[i].type}</div>
+                            <div>{actionsRules[i].type} {v}</div>
 
                             {!isCounter && actionsRules[i].desc_r1 !== "" && (
                                 <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : undefined}>

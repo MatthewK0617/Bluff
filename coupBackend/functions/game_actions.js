@@ -3,24 +3,38 @@ const db = require('../config/db');
 function update_game_turn(code, player_count) {
     return new Promise((resolve, reject) => {
         let game = "gd" + code;
-        db.query(`SELECT turnOrder FROM ?? WHERE id=?`, [game, -1], (err, res) => {
+        db.query(`SELECT playing FROM ?? WHERE code=?`, ["current_games", code], (err, res) => {
             if (err) console.log(err);
             else {
-                console.log(res);
-                let next_turn = res[0].turnOrder + 1;
-                if (player_count === next_turn) next_turn = 0;
-
-                db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, next_turn, -1], (err, res_) => {
-                    if (err) {
-                        console.log(err);
-                    }
+                let playing = res[0].playing;
+                // console.log("playing", playing);
+                db.query(`SELECT turnOrder FROM ?? WHERE id=?`, [game, -1], (err, res_) => {
+                    if (err) console.log(err);
                     else {
-                        console.log(res_);
-                        resolve(next_turn);
+                        // console.log(res_);
+                        let current_turn = res_[0].turnOrder;
+                        let next_turn = current_turn;
+                        // player elimination case
+                        if (next_turn < playing) {
+                            next_turn = current_turn + 1;
+                        };
+                        // console.log(next_turn);
+                        if (playing === next_turn) next_turn = 0;
+
+                        db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, next_turn, -1], (err, res__) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            else {
+                                // console.log(res__);
+                                resolve(next_turn);
+                            }
+                        })
                     }
                 })
             }
         })
+
     })
 }
 
@@ -47,7 +61,7 @@ function distribute_cards(code) {
                             let card = { id: res_[i].id, count: parseInt(res_[i].num) };
                             deck.push(card);
                         }
-                        console.log("deck", deck);
+                        // console.log("deck", deck);
                         // fill with strings containing card identifiers
                         let initial_cards_in_play = player_count * 2; // make this scalable
                         let selected_cards = [];
@@ -55,7 +69,7 @@ function distribute_cards(code) {
                         for (let i = 1; i < deck.length; i++) {
                             card_sums.push(deck[i].count + card_sums[i - 1]);
                         }
-                        console.log(card_sums);
+                        // console.log(card_sums);
 
                         for (let i = 0; i < player_count; i++) {
                             let v = -1;
@@ -63,7 +77,7 @@ function distribute_cards(code) {
                                 let randomValue = Math.random();
                                 // iterating through to find what card
                                 for (let k = 0; k < deck.length; k++) {
-                                    console.log(randomValue, card_sums[k] / deck_count, deck[k]);
+                                    // console.log(randomValue, card_sums[k] / deck_count, deck[k]);
                                     if (randomValue <= (card_sums[k] / deck_count)) {
                                         if (k !== 0) {
                                             if (card_sums[k] === card_sums[k - 1]) continue;
@@ -87,9 +101,9 @@ function distribute_cards(code) {
                                 deck[v].count--;
                                 deck_count--;
                                 selected_cards.push(deck[v].id);
-                                console.log(selected_cards);
+                                // console.log(selected_cards);
                             }
-                            console.log(cards);
+                            // console.log(cards);
                             db.query(`UPDATE ?? SET card_1=?, card_2=? WHERE id=?`, [game, selected_cards[i * 2], selected_cards[i * 2 + 1], ids[i]], (err, res__) => { // UPDATE PLAYER CARDS
                                 if (err) reject();
                                 else {
@@ -101,7 +115,7 @@ function distribute_cards(code) {
                             db.query(`UPDATE ?? SET num=? WHERE id=?`, [cards, deck[i].count, deck[i].id], (err, res) => {
                                 if (err) console.log(err);
                                 else {
-                                    console.log(res);
+                                    // console.log(res);
                                     resolve();
                                 }
                             })
@@ -118,11 +132,10 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
     db.query(`SELECT coins FROM ?? WHERE id=?`, [game, receiverId], (err, res) => {
         if (err) console.log(err);
         else {
-            // console.log()
             let receiverCoins = res[0].coins;
             db.query(`SELECT coins FROM ?? WHERE id=?`, [game, giverId], (err, res) => {
                 let giverCoins = res[0].coins;
-                console.log(trans_amount, giverCoins, receiverCoins);
+                console.log(trans_amount, receiverCoins, giverCoins);
 
                 if (giverCoins - trans_amount < 0) {
                     receiverCoins += giverCoins;
@@ -147,13 +160,6 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
             })
         }
     })
-
-    // access the game at the given code
-    // get {giverIds} coins -- remember to avoid sql injections
-    // add trans_amount to the receiverCoins
-    // subtract trans_amount from the giverCoins
-    // update both in the db
-    // return the receiverCoins and giverCoins in an array
 }
 
 function get_player_cards(game, id) {
@@ -168,10 +174,85 @@ function get_player_cards(game, id) {
 
 }
 
+/**
+ * Update the turn order if a player is eliminated.
+ */
+async function eliminated(code, elim_id, elim_turn) {
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT turnOrder, id FROM ??`, [`gd${code}`], (err, res) => {
+            if (err) console.log(err);
+            else {
+                // console.log(res);
+                let turns_and_ids = res;
+                // console.log("184", turns_and_ids);
+
+                for (let i = 0; i < turns_and_ids.length; i++) {
+                    if (turns_and_ids[i].id !== -1 && turns_and_ids[i].turnOrder > elim_turn) {
+                        db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`,
+                            [`gd${code}`, turns_and_ids[i].turnOrder - 1, turns_and_ids[i].id], (err, res_) => {
+                                if (err) console.log(err);
+                                // else console.log(res_);
+                            });
+                    }
+                    else if (turns_and_ids[i].id === elim_id) {
+                        db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`,
+                            [`gd${code}`, -2, turns_and_ids[i].id], (err, res_) => {
+                                if (err) console.log(err);
+                                // else console.log(res_);
+                            });
+                        db.query(`SELECT playing FROM ?? WHERE code=?`, ['current_games', code], (err, res_) => {
+                            if (err) console.log(err);
+                            else {
+                                // console.log(res_);
+                                let count = res_[0].playing;
+                                // console.log("count", count);
+                                db.query(`UPDATE ?? SET playing=? WHERE code=?`, ['current_games', count - 1, code], (err, res__) => {
+                                    if (err) console.log(err);
+                                    else {
+                                        if (count - 1 === 1) {
+                                            // console.log(code, elim_id);
+                                            const winner = end_game(code, elim_id);
+                                            // console.log(winner);
+                                            resolve(winner);
+                                        }
+                                        else resolve(null);
+                                    }
+                                })
+                            }
+                        })
+                    }
+                }
+            }
+        })
+    })
+
+}
+
+function end_game(code, elim_id) {
+    return new Promise((resolve, reject) => {
+        db.query(`SELECT * FROM gd${code} WHERE turnOrder!=-2 AND id NOT IN (?)`, [[-1, elim_id]], (err, res) => {
+            if (err) {
+                console.log(err);
+                resolve(null);
+            }
+            else {
+                console.log(res);
+                const winner = { 'id': res[0].id, 'username': res[0].username };
+                console.log(winner);
+                resolve(winner);
+            }
+        })
+    })
+}
+
 async function delete_card(code, id, card, callback) {
     let game = "gd" + code;
     let card_game = "cd" + code;
     let cards = await get_player_cards(game, id);
+    // if (!cards.card_1 || !cards.card_2) {
+    //     // change the 
+
+    // }
     let card_index = cards.card_1 === card ? 1 : 2;
 
     db.query(`UPDATE ?? SET card_${card_index}=? WHERE id=?`, [game, null, id], (err, res) => {
@@ -182,11 +263,11 @@ async function delete_card(code, id, card, callback) {
                 if (err) console.log(err);
                 else {
                     let num_in_deck = res_[0].num;
-                    console.log(num_in_deck);
+                    // console.log(num_in_deck);
                     db.query(`UPDATE ?? SET num=? WHERE id=?`, [card_game, num_in_deck + 1, card], (err, res__) => {
                         if (err) console.log(err);
                         else {
-                            console.log(res__);
+                            // console.log(res__);
                             callback("completed");
                         }
                     })
@@ -250,5 +331,6 @@ module.exports = {
     distribute_cards,
     coin_transactions,
     get_player_cards,
+    eliminated,
     delete_card,
 }
