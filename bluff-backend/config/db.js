@@ -6,7 +6,7 @@ const db = mysql.createConnection({
     user: "root",
     password: process.env.PASSWORD,
     database: "card_game",
-    port: 7999,
+    port: process.env.PORT,
     // socketPath: '/Applications/MAMP/tmp/mysql/mysql.sock'
 })
 
