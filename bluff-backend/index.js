@@ -22,8 +22,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// console.log(process.env.URL)
-
 const io = require('socket.io')(http, {
     cors: {
         origin: process.env.ORIGIN || "http://localhost:3000"
