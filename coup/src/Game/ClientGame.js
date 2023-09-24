@@ -7,34 +7,44 @@ import EndPage from "./EndPage";
 
 function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
     const baseURL = "http://localhost:8000/";
-    let [cards, setCards] = useState(['_', '_']);
+    let [cards, setCards] = useState([null, null]);
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);
-    let [isCounter, setIsCounter] = useState(false);
-    let [counterAction, setCounterAction] = useState(null);
-    let [lastAction, setLastAction] = useState(null);
+    let [isCounter, setIsCounter] = useState(false); // store
+    let [counterAction, setCounterAction] = useState(null); // store
+    let [lastAction, setLastAction] = useState(null); // store
     let [action, setAction] = useState(null);
-    let [loseCard, setLoseCard] = useState(false);
+    let [loseCard, setLoseCard] = useState(false); // store
     let [selectedArray, setSelectedArray] = useState([false, false, false, false, false, false]);
     let [fetch, setFetch] = useState(false);
     let [winner, setWinner] = useState("");
+    let [originalAction, setOriginalAction] = React.useState(null);
 
     /**
      * Load from local storage and update from db if necessary.
      */
     useEffect(() => {
-        const data1 = window.sessionStorage.getItem('code');
-        const data2 = parseInt(window.sessionStorage.getItem('id'));
-        const data3 = window.sessionStorage.getItem('lastAction');
-        const data4 = window.sessionStorage.getItem('winner');
+        const codeData = window.sessionStorage.getItem('code');
+        const idData = parseInt(window.sessionStorage.getItem('id'));
 
-        if (data3) setLastAction(JSON.parse(data3));
-        if (data4) setWinner(JSON.parse(data4));
-        if (data1 && data2) {
-            const code2 = JSON.parse(data1);
+        const isCounterData = window.sessionStorage.getItem('isCounter');
+        const counterActionData = window.sessionStorage.getItem('counterAction');
+        const lastActionData = window.sessionStorage.getItem('lastAction');
+        const loseCardData = window.sessionStorage.getItem('loseCard');
+        const winnerData = window.sessionStorage.getItem('winner');
+
+
+        if (isCounterData) setIsCounter(JSON.parse(isCounterData));
+        if (counterActionData) setCounterAction(JSON.parse(counterActionData));
+        if (lastActionData) setLastAction(JSON.parse(lastActionData));
+        if (loseCardData) setLoseCard(JSON.parse(loseCardData));
+        if (winnerData) setWinner(JSON.parse(winnerData));
+
+        if (codeData && idData) {
+            const code2 = JSON.parse(codeData);
             if (socket) socket.emit("reconnected", code2);
             setCode(code2);
-            setId(data2);
+            setId(idData);
 
             /**
              * Sorts the players for better interfacing.
@@ -47,14 +57,18 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                     if (v.id === -1) {
                         gameturn = v.turnOrder;
                         opponents.push(v);
-                    } else if (v.id === id) {
-                        let playerturn = v.turnOrder;
-                        setTurn(playerturn);
-                        setCards([v.c1, v.c2]);
-                        if (gameturn === playerturn) setIsTurn(true);
-                        else setIsTurn(false);
-                        opponents.push(v);
-                    } else opponents.unshift(v);
+                    } else if (v.id === id) { // change this
+                        if (v.turnOrder !== -2) {
+                            let playerturn = v.turnOrder;
+                            setTurn(playerturn);
+                            setCards([v.c1, v.c2]);
+                            if (gameturn === playerturn) setIsTurn(true);
+                            else setIsTurn(false);
+                            opponents.push(v);
+                        }
+                    } else {
+                        if (v.turnOrder !== -2) opponents.unshift(v);
+                    }
                 } setOpps(opponents);
             };
 
@@ -71,11 +85,17 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
             try {
                 window.sessionStorage.setItem('code', JSON.stringify(code));
                 window.sessionStorage.setItem('id', id);
+                window.sessionStorage.setItem('isCounter', JSON.stringify(isCounter));
+                window.sessionStorage.setItem('counterAction', JSON.stringify(counterAction));
+                window.sessionStorage.setItem('lastAction', JSON.stringify(lastAction));
+                window.sessionStorage.setItem('loseCard', JSON.stringify(loseCard));
+                window.sessionStorage.setItem('winner', JSON.stringify(winner));
+
             } catch (error) {
                 console.error('Error stringifying code:', error);
             }
         }, 100);
-    }, [code, id]);
+    }, [code, id, isCounter, counterAction, lastAction, loseCard, winner]);
 
     /**
      * Handles functions
@@ -105,23 +125,8 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
             setCounterAction(prevAction => ({
                 ...prevAction,
                 defenderId: A.id,
-                id: A.defender,
+                id: id,
             }));
-        }
-
-        /**
-         * Handles subsequent attacks (i.e. counters). 
-         * @param {*} d defender id
-         * @param {*} a attacker id
-         */
-        const handleSubsequentAttacks = (d, a) => {
-            if (id === d) {
-                setIsCounter(true);
-                setCounterAction(prevAction => ({
-                    ...prevAction,
-                    defenderId: d,
-                }));
-            } else setIsCounter(false);
         }
 
         if (socket) {
@@ -132,7 +137,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
             });
 
             socket.on('con_bluff_called', (defenderId) => {
-                socket.emit("eliminated", code, defenderId, turn);
+                socket.emit("eliminated", code, defenderId, turn, opps.length - 2);
             })
 
             socket.on('set-countering-players', (p1, p2) => {
@@ -146,22 +151,12 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                 }
             })
 
-            // handling first counter
+            // handling counters
             socket.on('counters', (_action) => {
-                console.log("handleAction");
+                console.log("handle counter");
+                setOriginalAction(_action);
                 handleAttack(_action);
             });
-
-            // // handling subsequent counters
-            // socket.on('counters_', (_lastAction) => {
-            //     console.log(_lastAction);
-            //     if (id !== _lastAction.id && id !== _lastAction.defenderId) {
-            //         console.log("not countering");
-            //         setIsCounter(false);
-            //     }
-            //     setLastAction(_lastAction);
-            //     handleSubsequentAttacks(_lastAction.defenderId, _lastAction.id);
-            // });
 
             // end counter interactions; begin true next turn
             socket.on('end_counters', () => {
@@ -230,15 +225,17 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                         gameturn = v.turnOrder;
                         opponents.push(v);
                     } else if (v.id === id) {
-                        opponents.push(v);
-                        setCards([v.c1, v.c2]);
-                        setTurn((prevTurn) => {
-                            // Calculate the new 'turn' based on 'prevTurn' and 'v.turnOrder'
-                            return v.turnOrder !== prevTurn ? v.turnOrder : prevTurn;
-                        });
+                        if (v.turnOrder !== -2) {
+                            opponents.push(v);
+                            setCards([v.c1, v.c2]);
+                            setTurn((prevTurn) => {
+                                // Calculate the new 'turn' based on 'prevTurn' and 'v.turnOrder'
+                                return v.turnOrder !== prevTurn ? v.turnOrder : prevTurn;
+                            });
+                        }
                         if (gameturn === v.turnOrder) setIsTurn(true);
                         else setIsTurn(false);
-                    } else opponents.unshift(v);
+                    } else if (v.turnOrder !== -2) opponents.unshift(v);
                 });
                 setOpps(opponents);
             }).catch((err) => {
@@ -266,16 +263,6 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
             console.log(err);
         }
     };
-
-    const sendCounters = (v) => {
-        if (v === "bs") {
-            socket.emit("counter", code, lastAction, opps.length - 1, v);
-        }
-        else if (v === "allow") {
-            console.log(lastAction);
-            socket.emit("counter", code, lastAction, opps.length - 1, v);
-        }
-    }
 
     const updateAction = (v) => {
         // console.log(v);
@@ -321,7 +308,6 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
         }
     }
 
-
     useEffect(() => {
         if (socket) {
             socket.on("game_over", (winner_) => {
@@ -343,12 +329,6 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
         <div className="client-wrapper">
             {!winner &&
                 <div className="players-wrapper">
-                    {turn !== -2 && isCounter && counterAction && counterAction.defenderId !== id &&
-                        <div className="counter-actions">
-                            <div onClick={(_) => sendCounters("allow")}>Allow</div>
-                            <div onClick={(_) => sendCounters("bs")}>BS</div>
-                        </div>}
-
                     {opps.map((v, i) => {
                         return (
                             <div key={i} className="players">
@@ -402,12 +382,22 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
 
                     {(action && action.defenderId)
                         && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
-                    <div className="usable-cards">
+                    {<div className="usable-cards">
                         <Actions code={code} id={id} action={action} setAction={setAction}
                             counterAction={counterAction} setCounterAction={setCounterAction}
                             isTurn={isTurn} isCounter={isCounter} selectedArray={selectedArray}
-                            setSelectedArray={setSelectedArray} />
-                    </div>
+                            setSelectedArray={setSelectedArray} lastAction={lastAction}
+                            setLastAction={setLastAction} opps={opps} socket={socket}
+                            originalAction={originalAction} />
+                    </div>}
+                    {/* Actions should be more dynamic. pass in array of counters
+                    based on what is pulled from db
+                    
+                    if isCounter check lastAction === counters (pulled from db)
+                    if notCounter send the card options (nothing to counter)
+                    decide if i want to filter out and not even show card options 
+                        if not turn
+                    /*/}
                 </div>
             }
             {winner && <EndPage winner={winner} code={code} id={id} />}
@@ -417,3 +407,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
 }
 
 export default ClientGame;
+
+
+// check select player and why it's not updating defenderId in counterAction
+// if it's not set for it, make it do it

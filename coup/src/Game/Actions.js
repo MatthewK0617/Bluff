@@ -3,10 +3,18 @@ import Axios from "axios";
 
 import './Actions.css';
 
-export default function Actions({ code, id, action, setAction, counterAction, setCounterAction, isTurn, isCounter, selectedArray, setSelectedArray }) {
+export default function Actions({ code, id, action, setAction,
+    counterAction, setCounterAction, isTurn, isCounter,
+    selectedArray, setSelectedArray, lastAction, setLastAction,
+    opps, socket, originalAction }) {
     const baseURL = "http://localhost:8000/";
     const [cards, setCards] = useState([]);
     let [actionsRules, setActionsRules] = useState([]);
+
+    const counters = {
+        "ass": ["con"],
+        "cap": ["cap"],
+    };
 
     useEffect(() => {
         // get from session storage
@@ -65,6 +73,10 @@ export default function Actions({ code, id, action, setAction, counterAction, se
             newSelectedArray[5] = !selectedArray[5];
         }
         setSelectedArray(newSelectedArray);
+        if (counterAction) setCounterAction((prev) => ({
+            ...prev,
+            card: null,
+        }));
         setAction(null);
     }
 
@@ -104,62 +116,93 @@ export default function Actions({ code, id, action, setAction, counterAction, se
         console.log(actionObj);
     }
 
+    const sendCounters = (v) => {
+        if (v === "bs") {
+            // tracking the person who called bs
+            let lastAction2 = { ...lastAction };
+            lastAction2.defenderId = id; // gets switched in back-end
+            // the one who called is currently "defender"
+            setLastAction((prev) => ({
+                ...prev,
+                card: "bs",
+            }));
+            socket.emit("counter", code, lastAction2, opps.length - 1, v, null);
+        }
+        else if (v === "allow") {
+            console.log(lastAction);
+            setLastAction((prev) => ({
+                ...prev,
+                card: "allow",
+            })); // defender is the one that allowed
+            // lastAction passed in does not have card set to allow. in fact, prob shouldnt
+            socket.emit("counter", code, lastAction, opps.length - 1, v, originalAction);
+        }
+    }
+
     return (
         <div>
-            <div className="actions-wrapper">
-                {/* {isTurn &&
-                    <div className="take-coins-action" onClick={(_) => actionCreator(-1, 2)}>
-                        Coins
-                    </div>
-                } */}
-                {isTurn &&
-                    <div className="take-coins-action" onClick={(_) => toggleActionRules('coins')}>
-                        Coins
-                    </div>
-                }
-                {!isTurn &&
-                    <div className="take-coins-action">
-                        Coins
-                    </div>
-                }
-                {cards.map((v, i) => {
-                    return (
-                        // implement amb later 
-                        i !== 0 && <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
-                            {v.id}
+            {!isCounter &&
+                <div className="actions-wrapper">
+                    {isTurn &&
+                        <div className="take-coins-action" onClick={(_) => toggleActionRules('coins')}>
+                            Coins
                         </div>
-                    )
-                })}
-                {selectedArray.map((v, i) => {
-                    return (
-                        // flip the card over to see the actions you can take
-                        v && <div key={i} className="card-specific-options">
-                            <div>{actionsRules[i].type} {v}</div>
+                    }
+                    {!isTurn &&
+                        <div className="take-coins-action">
+                            Coins
+                        </div>
+                    }
+                    {cards.map((v, i) => {
+                        return (
+                            // implement amb later 
+                            i !== 0 && <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
+                                {v.id}
+                            </div>
+                        )
+                    })}
+                    {selectedArray.map((v, i) => {
+                        return (
+                            // flip the card over to see the actions you can take
+                            v && <div key={i} className="card-specific-options">
+                                <div>{actionsRules[i].type} {v}</div>
 
-                            {!isCounter && actionsRules[i].desc_r1 !== "" && (
-                                <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : undefined}>
-                                    {actionsRules[i].desc_r1}
-                                </div>
-                            )}
-                            {actionsRules[i].type === "def" ?
-                                (actionsRules[i].desc_r2 !== "" && (
-                                    <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : undefined}>
-                                        {actionsRules[i].desc_r2}
+                                {lastAction && lastAction.card === "ass" && <div>asdasd</div>}
+
+                                {!isCounter && actionsRules[i].desc_r1 !== "" && (
+                                    <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : console.log("1")}>
+                                        {actionsRules[i].desc_r1}
                                     </div>
-                                )
-                                ) :
-                                (isCounter && actionsRules[i].desc_r2 !== "" && (
-                                    <div onClick={() => actionHandler(actionsRules[i].type, 2)}>
-                                        {actionsRules[i].desc_r2}
-                                    </div>
-                                )
-                                )
-                            }
-                        </div>
-                        // </div>
-                    )
-                })}
-            </div>
+                                )}
+                                {actionsRules[i].type === "def" ?
+                                    (actionsRules[i].desc_r2 !== "" && (
+                                        <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : console.log("1a")}>
+                                            {actionsRules[i].desc_r2}
+                                        </div>
+                                    )
+                                    ) :
+                                    (lastAction && lastAction.rule !== 2 && isCounter && actionsRules[i].desc_r2 !== "" && (
+                                        <div onClick={lastAction && lastAction.defenderId === id ? () => actionHandler(actionsRules[i].type, 2) : console.log(lastAction)}>
+                                            {actionsRules[i].desc_r2} {id}
+                                        </div>
+                                    )
+                                    )
+                                }
+                            </div>
+                            // </div>
+                        )
+                    })}
+                </div>}
+            {isCounter && counterAction && counterAction.defenderId !== id &&
+                <div className="counter-actions">
+                    {lastAction.defenderId === id && <div onClick={(_) => sendCounters("allow")}>Allow</div>}
+                    <div onClick={(_) => sendCounters("bs")}>BS</div>
+                    {/* map the new options here */}
+                    {lastAction && lastAction.defenderId === id && lastAction.rule === 1 && counters[lastAction.card] &&
+                        counters[lastAction.card].map((v, i) => (
+                            <div key={i} onClick={() => actionHandler(v, 2)}>{v}</div>
+                        ))}
+                </div>}
         </div>
     )
 };
