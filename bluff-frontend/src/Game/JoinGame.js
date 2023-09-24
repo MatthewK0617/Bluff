@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import Axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -6,16 +6,12 @@ import './JoinGame.css';
 
 export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, setOpps, socket }) {
     const formRef = useRef(null);
-    const baseURL = "http://localhost:8000/";
+    const baseURL = process.env.URL || "http://localhost:8000/";
     let list = [];
 
     const [ign, setIgn] = useState("");
     const [code, setCode] = useState("");
     const [added, setAdded] = useState(false);
-
-    useEffect(() => {
-        getGames();
-    }, []);
 
     const onChangeCode = (event) => {
         const code = event.target.value;
@@ -31,7 +27,7 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
         event.preventDefault();
         await getPlayers();
         console.log("onSubmit");
-        await joinGame(); 
+        await joinGame();
     };
 
     useEffect(() => {
@@ -78,15 +74,18 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
         }
     };
 
-    const getGames = async () => {
+    const getGames = useCallback(async () => {
         try {
-            const res = await Axios.get(`${baseURL}getGames`);
-            const gameCodes = res.data.map((game) => game.code);
+            const gameCodes = await getGames();
             return gameCodes;
         } catch (error) {
-            console.log(error);
+            throw error;
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        getGames();
+    }, [getGames]);
 
     const joinGame = async () => {
         try {

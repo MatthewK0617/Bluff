@@ -6,7 +6,7 @@ import Actions from "./Actions";
 import EndPage from "./EndPage";
 
 function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
-    const baseURL = "http://localhost:8000/";
+    const baseURL = process.env.URL || "http://localhost:8000/";
     let [cards, setCards] = useState([null, null]);
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);
@@ -78,7 +78,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                 .then((res) => { if (res) sortPlayers(res) })
                 .catch((err) => { console.log(err) })
         };
-    }, [setCode, setId, setOpps, socket, code, id]);
+    }, [setCode, setId, setOpps, socket, code, id, baseURL]);
 
     useEffect(() => {
         setTimeout(() => {
@@ -242,7 +242,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                 console.log(err);
             });
         }
-    }, [code, id, setOpps]);
+    }, [code, id, setOpps, baseURL]);
 
     useEffect(() => {
         FetchData();

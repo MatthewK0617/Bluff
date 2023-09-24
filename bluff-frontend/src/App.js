@@ -11,6 +11,7 @@ import WaitingRoom from './Game/WaitingRoom';
 import JoinGame from './Game/JoinGame';
 
 function App() {
+  const URL = process.env.URL || "http://localhost:8000/";
   const [opps, setOpps] = useState([]);
   const [socket, setSocket] = React.useState(null);
   const [code, setCode] = React.useState("");
@@ -27,12 +28,12 @@ function App() {
 
 
   useEffect(() => {
-    fetch("http://localhost:8000/")
+    fetch(URL)
       .then((res) => res.json())
-  }, []);
+  }, [URL]);
 
   useEffect(() => {
-    const socket1 = io.connect("http://localhost:8000");
+    const socket1 = io.connect(URL);
     setSocket(socket1);
 
     socket1.on("connect", data => {
@@ -43,7 +44,7 @@ function App() {
     });
     return () =>
       socket1.disconnect();
-  }, [])
+  }, [URL])
 
   return (
       <Router>

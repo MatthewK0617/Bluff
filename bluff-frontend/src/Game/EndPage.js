@@ -3,7 +3,7 @@ import Axios from "axios";
 import './EndPage.css';
 
 export default function EndPage({ winner, code, id }) {
-    const baseURL = 'http://localhost:8000/'; // Corrected baseURL protocol (http)
+    const baseURL = process.env.URL || "http://localhost:8000/";
 
     useEffect(() => {
         let isMounted = true;
@@ -36,7 +36,7 @@ export default function EndPage({ winner, code, id }) {
             isMounted = false;
             clearTimeout(timer);
         };
-    }, [code, id]);
+    }, [code, id, baseURL]);
 
     return (
         <div className="end-wrapper">

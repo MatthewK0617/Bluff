@@ -5,6 +5,7 @@ import Axios from 'axios';
 import './WaitingRoom.css';
 
 export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, socket }) {
+    const baseURL = process.env.URL || "http://localhost:8000/";
 
     // when someone new joins namespace, call getPlayers again
     useEffect(() => {
@@ -27,7 +28,7 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         return () => {
             clearInterval(interval);
         };
-    }, [code, setOpps, opps]);
+    }, [code, setOpps, opps, baseURL]);
 
     useEffect(() => {
         const data1 = window.sessionStorage.getItem('code');
@@ -79,7 +80,6 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         }
     }, [socket]);
 
-    const baseURL = "http://localhost:8000/";
     const handleLeaveGame = async () => {
         try {
             await Axios.post(`${baseURL}leaveGame`, {
@@ -105,7 +105,7 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
     return (
         <div className="waiting-wrapper">
             <div className="game-info">
-            {code}
+                {code}
             </div>
             <div className="all-waiting-players-wrapper">
                 {opps.map((v, i) => {

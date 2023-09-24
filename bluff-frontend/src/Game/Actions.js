@@ -7,7 +7,7 @@ export default function Actions({ code, id, action, setAction,
     counterAction, setCounterAction, isTurn, isCounter,
     selectedArray, setSelectedArray, lastAction, setLastAction,
     opps, socket, originalAction }) {
-    const baseURL = "http://localhost:8000/";
+    const baseURL = process.env.URL || "http://localhost:8000/";
     const [cards, setCards] = useState([]);
     let [actionsRules, setActionsRules] = useState([]);
 
@@ -55,7 +55,7 @@ export default function Actions({ code, id, action, setAction,
                 })
             }
         }
-    }, [code]);
+    }, [code, baseURL]);
 
     const toggleActionRules = (action_name) => {
         const newSelectedArray = [false, false, false, false, false, false];
