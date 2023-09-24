@@ -1,4 +1,4 @@
-const db = require('../config/db').default;
+const db = require('../config/db');
 
 function handleClear() {
     db.query(`delete from current_players`, (err, res) => {
