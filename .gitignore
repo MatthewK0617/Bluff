@@ -1,2 +1,4 @@
-coupBackend/config/
+bluff-backend/config/
+bluff-backend/node_modules/
 
+bluff-frontend/node_modules/
