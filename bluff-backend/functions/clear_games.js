@@ -5,15 +5,12 @@ function handleClear() {
         if (err) {
             console.log(err)
         }
-        // res.send(result);
     });
 
     db.query(`delete from current_games`, (err, res) => {
         if (err) {
             console.log(err)
         }
-        // res.send(result);
-
     })
 };
 

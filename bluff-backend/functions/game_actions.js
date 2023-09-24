@@ -162,6 +162,7 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
     })
 }
 
+// move this to game_functions
 function get_player_cards(game, id) {
     return new Promise((resolve, reject) => {
         db.query(`SELECT card_1, card_2 FROM ?? WHERE id=?`, [game, id], (err, res) => {
@@ -204,12 +205,12 @@ async function eliminated(code, elim_id, elim_turn) {
                             if (err) console.log(err);
                             else {
                                 // console.log(res_);
-                                let count = res_[0].playing;
-                                // console.log("count", count);
-                                db.query(`UPDATE ?? SET playing=? WHERE code=?`, ['current_games', count - 1, code], (err, res__) => {
+                                let count = res_[0].playing - 1;
+                                console.log("count", count);
+                                db.query(`UPDATE ?? SET playing=? WHERE code=?`, ['current_games', count, code], (err, res__) => {
                                     if (err) console.log(err);
                                     else {
-                                        if (count - 1 === 1) {
+                                        if (count === 1) {
                                             // console.log(code, elim_id);
                                             const winner = end_game(code, elim_id);
                                             // console.log(winner);
@@ -287,6 +288,7 @@ async function delete_card(code, id, card, callback) {
 /**
  * ambassador: 
  * r1: get 2 cards, and return any 2 cards
+ * r2: block 2 coin gain
  */
 
 /**
@@ -308,7 +310,6 @@ async function delete_card(code, id, card, callback) {
 /**
  * duke
  * r1: take 3 coins 
- * r2: block 2 coin gain
  */
 
 /** implement this later

@@ -27,13 +27,9 @@ const io = require('socket.io')(http, {
 });
 
 io.on("connection", (socket) => {
-    let socket_id = socket.id;
     console.log(socket.id, "connected");
-    // console.log((Object.keys(io.sockets.sockets)).length);
-
     socket.on("joinGameWaiting", (arg1, arg2, callback) => {
         socket.join(arg1);
-
         console.log(arg2 + " joined " + arg1);
         socket.emit("getplayers"); // should be when someone joins room, not in general
         sql_db.getPlayersSocket(arg1, arg2, (error, players) => {
@@ -67,26 +63,28 @@ io.on("connection", (socket) => {
     // });
 
     socket.on("end_turn", async (code, action, player_count) => {
-        // emit to enable counters. render client side. update this 
         console.log(action);
-        await game_actions_handler.handler(io, code, action);
         if (action.card === "def" && action.rule === 1) {
+            await game_actions_handler.handler(io, code, action);
             io.of('/').to(code).emit("end_counters");
             let next_turn = await game_actions.update_game_turn(code, player_count);
-            console.log(next_turn);
             io.of('/').to(code).emit("next_turn", next_turn);
         }
         else {
-            let action2 = { ...action };
-            // action2.id = action.defenderId;
-            // action2.defenderId = action.id;
-            io.of('/').to(code).emit("counters", action2); // will become defender
+            io.of('/').to(code).emit("counters", action); // will become defender
+            // keep the original action
         }
     })
 
-    socket.on("counter", async (code, action, player_count, v) => {
+    socket.on("counter", async (code, action, player_count, v, original_action) => {
         io.emit("set-countering-players", action.id, action.defenderId);
         if (v === "allow") {
+            // if original_action p1 and p2 are in the same order, then do the action
+            // else, don't do the action
+
+            // for some reason above is backwards
+            if (original_action.id !== action.id || action.rule === 1) await game_actions_handler.handler(io, code, action);
+            
             if (action.card !== "ass") {
                 io.of('/').to(code).emit("end_counters");
                 console.log('end_counters emitted');
@@ -101,18 +99,6 @@ io.on("connection", (socket) => {
         else if (v === "bs") {
             await game_actions_handler.bs(io, code, action);
         }
-        // else {
-        //     if (action.card === "con") {
-        //         // dont need to do anything
-        //         // socket.emit("block_3coup");
-        //     }
-        //     await game_actions_handler.handler(io, code, action);
-        //     // subsequent counters should only show the attacker and defender
-        //     let action2 = { ...action };
-        //     action2.id = action.defenderId;
-        //     action2.defenderId = action.id;
-        //     io.of('/').to(code).emit("counters_", action2);
-        // }
     })
 
     socket.on("continue", async (code, player_count) => {
@@ -125,10 +111,16 @@ io.on("connection", (socket) => {
         game_actions.delete_card(code, id, card, callback);
     })
 
-    socket.on("eliminated", async (code, id, eliminated_turn) => {
+    socket.on("eliminated", async (code, id, eliminated_turn, player_count) => {
+        // can also say if player_count is 1, there is a winner
         const winner = await game_actions.eliminated(code, id, eliminated_turn);
         console.log("winner", winner);
-        if (winner) io.emit("game_over", winner);
+        console.log("turn", eliminated_turn);
+        if (winner) io.of('/').to(code).emit("game_over", winner);
+        else {
+            let next_turn = await game_actions.update_game_turn(code, player_count);
+            io.of('/').to(code).emit("next_turn", next_turn);
+        }
     })
 
     socket.on("coup", (code, agentId, receiverId, card) => {
@@ -144,11 +136,8 @@ io.on("connection", (socket) => {
                 coins = res;
                 console.log(coins);
                 // emit pick_card to delete
-                game_actions.delete_card(receiverId, (err, res) => {
+                game_actions.delete_card(receiverId, (err) => {
                     if (err) console.log(err);
-                    else {
-
-                    }
                 })
             }
         })
@@ -162,24 +151,10 @@ io.on("connection", (socket) => {
     socket.on("swap", (code, agentId, card) => {
         // ambassador and judge
     })
-
     socket.on("view", (code, agentId, receiverId, card) => {
         // judge r1
         // emit
     })
-
-    socket.on("block_steal", (code, agentId, receiverId, card) => {
-        // receiver is now the person whos attempt is blocked
-        // agent is the person whos blocking
-        // emit
-    })
-
-    socket.on("block_coup", (code, agentId, receiverId, card) => {
-        // contessa 
-        // emit
-    })
-
-
 });
 
 /**
@@ -271,3 +246,29 @@ app.post("/leaveInGame", (req, res) => {
 http.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
+
+/** 
+ * Database clean-up
+ */
+setInterval(() => {
+    // access the current_games db
+    // if players is 0 or less than 0 clear it
+    // drop the corresponding tables
+    db.query(`SELECT * FROM current_games WHERE playing<=0`, (err, res) => {
+        if (err) console.log(0, err);
+        else {
+            db.query(`DELETE FROM current_games WHERE playing <=0`, (err, res_) => {
+                // if (err) console.log(err);
+                // else console.log(res_);
+            })
+            let empty_games = res;
+            for (let games of empty_games) {
+                // console.log(games);
+                db.query(`DROP table ??, ??`, [`cd${games.code}`, `gd${games.code}`], (err, res_) => {
+                    // if (err) console.log(err);
+                    // else console.log(res_);
+                })
+            }
+        }
+    })
+}, 30000);
