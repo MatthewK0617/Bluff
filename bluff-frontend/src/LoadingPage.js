@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './LoadingPage.css'
 
 export default function LoadingPage() {
-    const string = 'Coup.'
+    const string = 'Bluff.'
     const [letters, setLetters] = React.useState([]);
 
     React.useEffect(() => {
