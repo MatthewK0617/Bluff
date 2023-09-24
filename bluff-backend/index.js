@@ -17,11 +17,11 @@ const http = require('http').Server(app);
 console.log(http);
 const cors = require("cors");
 const corsOptions = {
-    origin: [
-        "http://localhost:3000",   // Allow requests from local development environment
-        "https://bluff.netlify.app" // Allow requests from Netlify-hosted frontend
-    ],
+    origin: process.env.NODE_ENV === 'production'
+        ? "https://bluff.netlify.app" // Production origin
+        : "*",
 };
+
 
 app.use(cors(corsOptions));
 app.use(express.json());

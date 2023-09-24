@@ -76,12 +76,13 @@ export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, set
 
     const getGames = useCallback(async () => {
         try {
-            const gameCodes = await getGames();
+            const res = await Axios.get(`${baseURL}getGames`);
+            const gameCodes = res.data.map((game) => game.code);
             return gameCodes;
         } catch (error) {
-            throw error;
+            console.log(error);
         }
-    }, []);
+    }, [baseURL]);
 
     useEffect(() => {
         getGames();
