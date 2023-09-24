@@ -39,7 +39,6 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
         if (data1 !== null && data2 !== null && data3 !== null) {
             try {
                 const code2 = JSON.parse(data1) + "";
-                console.log(data3);
                 const opps2 = JSON.parse(data3);
                 // load all the data correlated with saved id
                 setCode(code2);
@@ -70,7 +69,6 @@ export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, s
 
     useEffect(() => {
         if (socket) {
-            console.log("hi");
             socket.on('gamestarting', (arg1) => {
                 console.log(arg1);
                 setTimeout(() => {
