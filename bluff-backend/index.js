@@ -7,25 +7,28 @@ const connections_ = require('./functions/connections.js');
 const clear = require('./functions/clear_games.js');
 const game_actions = require('./functions/game_actions.js');
 const game_actions_handler = require('./functions/game_actions_handler.js');
-
 const express = require("express");
-const app = express();
-
 const db = require('./config/db');
 
+const app = express();
 const PORT = process.env.PORT || 8000;
-
 const http = require('http').Server(app);
-const cors = require("cors");
 
-app.use(cors());
+console.log(http);
+const cors = require("cors");
+const corsOptions = {
+    origin: [
+        "http://localhost:3000",   // Allow requests from local development environment
+        "https://bluff.netlify.app" // Allow requests from Netlify-hosted frontend
+    ],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const io = require('socket.io')(http, {
-    cors: {
-        origin: process.env.ORIGIN || "http://localhost:3000"
-    }
+    cors: corsOptions
 });
 
 io.on("connection", (socket) => {
@@ -86,7 +89,7 @@ io.on("connection", (socket) => {
 
             // for some reason above is backwards
             if (original_action.id !== action.id || action.rule === 1) await game_actions_handler.handler(io, code, action);
-            
+
             if (action.card !== "ass") {
                 io.of('/').to(code).emit("end_counters");
                 console.log('end_counters emitted');
