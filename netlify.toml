@@ -1,28 +1,21 @@
-# netlify.toml configuration for a full-stack application
-
-# Build settings for the front-end (React) application
-[[redirects]]
-  from = "/*"
-  to = "/bluff-frontend/:splat"
-  status = 200
-
 [build]
+  # Global build settings here
+
+[build.environment]
+  # Global environment variables here
+
+[[build]]
+  dir = "bluff-frontend"
   publish = "bluff-frontend/build"
   command = "npm --prefix bluff-frontend run build"
 
 [build.environment]
-  NODE_VERSION = "14"
-  REACT_APP_API_KEY = "your_api_key_here"
+  # Environment variables specific to front-end here
 
-# Build settings for the back-end (Node.js) application
-[[redirects]]
-  from = "/api/*"
-  to = "/bluff-backend/:splat"
-  status = 200
-
-[build]
+[[build]]
+  dir = "bluff-backend"
   base = "bluff-backend"
   command = "npm --prefix bluff-backend run build"
 
 [build.environment]
-  NODE_VERSION = "14"
+  # Environment variables specific to back-end here
