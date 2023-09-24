@@ -15,9 +15,6 @@ function App() {
   const [socket, setSocket] = React.useState(null);
   const [code, setCode] = React.useState("");
   const [id, setId] = React.useState(0);
-  const [ign, setIgn] = React.useState("");
-
-  // const [loading, setLoading] = useState(true);
 
   function handleCode(newCode) {
     setCode(newCode);
@@ -32,9 +29,6 @@ function App() {
   useEffect(() => {
     fetch("http://localhost:8000/")
       .then((res) => res.json())
-      // .finally(() => {
-      //   setLoading(false); // Once data is fetched, setLoading to false
-      // });
   }, []);
 
   useEffect(() => {
@@ -51,18 +45,9 @@ function App() {
       socket1.disconnect();
   }, [])
 
-  // if (loading) {
-  //   // Render a loading indicator or splash screen while loading
-  //   return <div className='app-wrapper' />
-  // }
-
   return (
-    // <div className='app-wrapper'>
       <Router>
         <Routes>
-          {/* <p>
-          <time dateTime={time}>{time}</time>
-        </p> */}
           <Route path="/" element={<LoadingPage />} />
           <Route path="/settings" element={<Settings socket={socket} code={code} setCode={handleCode} id={id} setId={handleId} setOpps={setOpps} />} />
           <Route path="/games" element={<ClientGame code={code} setCode={setCode} id={id} setId={setId} opps={opps} setOpps={setOpps} socket={socket} />} />
@@ -70,8 +55,6 @@ function App() {
           <Route path="/joingame" element={<JoinGame codeFinal={code} setCodeFinal={setCode} id={id} setId={setId} opps={opps} setOpps={setOpps} socket={socket} />} />
         </Routes>
       </Router>
-    // </div>
-
   );
 }
 
