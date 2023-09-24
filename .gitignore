@@ -1,4 +1,2 @@
-bluff-backend/config/
-bluff-backend/node_modules/
-
-bluff-frontend/node_modules/
+node_modules
+.env
