@@ -1,5 +1,5 @@
 {
-  "name": "coupbackend",
+  "name": "bluff-backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -13,11 +13,10 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "mysql": "^2.18.1",
-    "nodemon": "^2.0.22",
-    "socket.io": "^4.7.1",
-    "socket.io-client": "^4.7.1"
+    "nodemon": "^3.0.1",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2"
   }
 }

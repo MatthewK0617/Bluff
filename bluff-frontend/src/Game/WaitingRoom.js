@@ -5,7 +5,7 @@ import Axios from 'axios';
 import './WaitingRoom.css';
 
 export default function WaitingRoom({ code, setCode, id, setId, opps, setOpps, socket }) {
-    const baseURL = process.env.URL || "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
 
     // when someone new joins namespace, call getPlayers again
     useEffect(() => {

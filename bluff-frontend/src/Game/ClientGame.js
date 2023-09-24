@@ -6,7 +6,7 @@ import Actions from "./Actions";
 import EndPage from "./EndPage";
 
 function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
-    const baseURL = process.env.URL || "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
     let [cards, setCards] = useState([null, null]);
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);

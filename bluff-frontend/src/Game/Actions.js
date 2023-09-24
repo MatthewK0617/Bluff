@@ -7,7 +7,8 @@ export default function Actions({ code, id, action, setAction,
     counterAction, setCounterAction, isTurn, isCounter,
     selectedArray, setSelectedArray, lastAction, setLastAction,
     opps, socket, originalAction }) {
-    const baseURL = process.env.URL || "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
+    console.log(process.env.REACT_APP_URL)
     const [cards, setCards] = useState([]);
     let [actionsRules, setActionsRules] = useState([]);
 

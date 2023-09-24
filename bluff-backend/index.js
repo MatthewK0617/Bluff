@@ -1,4 +1,6 @@
 /* imports */
+require('dotenv').config();
+
 const sql_db = require('./functions/sql_db.js');
 const create_game = require('./functions/create_game.js');
 const connections_ = require('./functions/connections.js');
@@ -20,9 +22,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// console.log(process.env.URL)
+
 const io = require('socket.io')(http, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: process.env.ORIGIN || "http://localhost:3000"
     }
 });
 

@@ -3,7 +3,7 @@ import Axios from "axios";
 import './EndPage.css';
 
 export default function EndPage({ winner, code, id }) {
-    const baseURL = process.env.URL || "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
 
     useEffect(() => {
         let isMounted = true;

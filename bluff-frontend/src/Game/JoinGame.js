@@ -6,7 +6,7 @@ import './JoinGame.css';
 
 export default function JoinGame({ codeFinal, setCodeFinal, id, setId, opps, setOpps, socket }) {
     const formRef = useRef(null);
-    const baseURL = process.env.URL || "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
     let list = [];
 
     const [ign, setIgn] = useState("");

@@ -1,6 +1,4 @@
 const db = require('../config/db');
-const sql_db = require('./sql_db.js');
-
 
 function createGame(io, req, res) {
     // console.log("id in createGame: " + socket_id);

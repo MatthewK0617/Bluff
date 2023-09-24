@@ -11,7 +11,7 @@ import WaitingRoom from './Game/WaitingRoom';
 import JoinGame from './Game/JoinGame';
 
 function App() {
-  const URL = process.env.URL || "http://localhost:8000/";
+  const URL = process.env.REACT_APP_URL || "http://localhost:8000/";
   const [opps, setOpps] = useState([]);
   const [socket, setSocket] = React.useState(null);
   const [code, setCode] = React.useState("");
