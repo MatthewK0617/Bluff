@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const mysql = require('mysql')
-const db = process.env.NODE_ENV !== 'production' ? mysql.createConnection({
+const db = process.env.NODE_ENV === 'production' ? mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
