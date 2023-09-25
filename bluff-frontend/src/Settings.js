@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function Settings({ socket, code, setCode, id, setId, setOpps }) {
     // change this to pull from template
-    const baseURL = "http://localhost:8000/"
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
     const [cards, setCards] = React.useState([
         {
             id: 'amb',
