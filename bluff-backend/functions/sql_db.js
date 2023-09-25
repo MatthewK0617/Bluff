@@ -1,17 +1,15 @@
-// maybe make error handler function
 const db = require('../config/db');
 
+/**
+ * 
+ * @param {*} req unused
+ * @param {*} res 
+ */
 function getGames(req, res) {
     db.query("SELECT * FROM current_games", (err, result) => {
-        if (err) {
-            console.log(err);
-            res.status(500).send("An error occurred.");
-        }
-        else {
-            res.send(result);
-        }
+        if (err) console.log(err)
+        else res.send(result);
     });
-    // console.log('finished');
 }
 
 function getPlayersSocket(code, id, callback) {
@@ -174,7 +172,7 @@ function addPlayers(app, req, res) {
     })
 }
 
-function updateCardData(app, req) { // needed if you want to change card mechanics in game
+function updateCardData(app, req, res) { // needed if you want to change card mechanics in game
     let curr_game = "cd" + req.body.curr_game;
     let id = req.body.id;
     const num = req.body.num;
@@ -185,6 +183,8 @@ function updateCardData(app, req) { // needed if you want to change card mechani
     db.query(`UPDATE ?? SET num=?, r1=?, r2=?, r3=? WHERE id=?`, [curr_game, num, r1, r2, r3, id], (err, result) => {
         if (err) {
             console.log(err);
+        } else {
+            res.send("updated");
         }
     })
 }
@@ -261,8 +261,8 @@ function leaveInGame(req, res1) {
                     console.log(err);
                 } else {
                     // console.log(res);
-                    count = res[0].player_count-1;
-                    playing = res[0].playing-1;
+                    count = res[0].player_count - 1;
+                    playing = res[0].playing - 1;
 
                     db.query(`UPDATE current_games SET player_count=?, playing=? WHERE code=?`, [count, playing, code], (err, result) => {
                         if (err) {

@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const mysql = require('mysql')
+const mysql = require('mysql');
 const db = process.env.NODE_ENV === 'production' ? mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -15,17 +15,9 @@ const db = process.env.NODE_ENV === 'production' ? mysql.createConnection({
     port: 7999,
 })
 
-
 db.connect((err) => {
     if (err) throw err;
     console.log("Connected to", db.config.database);
 });
 
 module.exports = db;
-
-/**
- * to start up:
- * start up MySQL server
- * nodemon index.js
- * npm start
- */
