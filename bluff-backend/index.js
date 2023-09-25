@@ -23,7 +23,9 @@ const cors = require("cors");
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? "https://bluff.netlify.app" : "*",
+    methods: ["GET", "POST"]
 };
+console.log(corsOptions.origin);
 
 app.use(express.json()); // enable json parsing
 app.use(express.urlencoded({ extended: true })); // enable URL-encoded data parsing
@@ -31,8 +33,9 @@ app.use(cors(corsOptions));
 // app.use(express.static('/public'));
 
 const io = require('socket.io')(http, {
-    cors: corsOptions
+    cors: corsOptions,
 });
+
 
 /** handle socket.io connection */
 io.on("connection", (socket) => {
@@ -63,7 +66,7 @@ io.on("connection", (socket) => {
     socket.on("end_turn", async (code, action, player_count) => {
         if (action.card === "def" && action.rule === 1) { // un-counterable action
             // handle action 
-            await game_actions_handler.handler(io, code, action); 
+            await game_actions_handler.handler(io, code, action);
             // end the counter stage
             io.of('/').to(code).emit("end_counters");
             // start the next turn
