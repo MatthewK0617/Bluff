@@ -1,6 +1,7 @@
 require('dotenv').config();
-
 const mysql = require('mysql');
+
+// db declaration for production vs. development
 const db = process.env.NODE_ENV === 'production' ? mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,

@@ -1,5 +1,12 @@
 const db = require('../config/db');
+const sql_db = require('./sql_db.js');
 
+/**
+ * Notifies the game to update the turns
+ * @param {*} code game identification
+ * @param {*} player_count number of players in the game (unused)
+ * @returns the next turn
+ */
 function update_game_turn(code, player_count) {
     return new Promise((resolve, reject) => {
         let game = "gd" + code;
@@ -7,18 +14,15 @@ function update_game_turn(code, player_count) {
             if (err) console.log(err);
             else {
                 let playing = res[0].playing;
-                // console.log("playing", playing);
                 db.query(`SELECT turnOrder FROM ?? WHERE id=?`, [game, -1], (err, res_) => {
                     if (err) console.log(err);
                     else {
-                        // console.log(res_);
                         let current_turn = res_[0].turnOrder;
                         let next_turn = current_turn;
                         // player elimination case
                         if (next_turn < playing) {
                             next_turn = current_turn + 1;
                         };
-                        // console.log(next_turn);
                         if (playing === next_turn) next_turn = 0;
 
                         db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`, [game, next_turn, -1], (err, res__) => {
@@ -26,7 +30,6 @@ function update_game_turn(code, player_count) {
                                 console.log(err);
                             }
                             else {
-                                // console.log(res__);
                                 resolve(next_turn);
                             }
                         })
@@ -38,6 +41,11 @@ function update_game_turn(code, player_count) {
     })
 }
 
+/**
+ * Distributes the player cards and updates the db 
+ * @param {*} code 
+ * @returns null
+ */
 function distribute_cards(code) {
     return new Promise((resolve, reject) => {
         let game = "gd" + code;
@@ -127,6 +135,14 @@ function distribute_cards(code) {
     })
 }
 
+/**
+ * Handles coin transactions
+ * @param {*} code game identifier
+ * @param {*} giverId person losing coins (attacked/defender)
+ * @param {*} receiverId person receiving coins (attacker)
+ * @param {*} trans_amount transaction amount
+ * @param {*} callback 
+ */
 function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
     let game = "gd" + code;
     db.query(`SELECT coins FROM ?? WHERE id=?`, [game, receiverId], (err, res) => {
@@ -135,8 +151,7 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
             let receiverCoins = res[0].coins;
             db.query(`SELECT coins FROM ?? WHERE id=?`, [game, giverId], (err, res) => {
                 let giverCoins = res[0].coins;
-                console.log(trans_amount, receiverCoins, giverCoins);
-
+                // console.log(trans_amount, receiverCoins, giverCoins);
                 if (giverCoins - trans_amount < 0) {
                     receiverCoins += giverCoins;
                     giverCoins = 0;
@@ -145,8 +160,7 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
                     receiverCoins += trans_amount;
                     giverCoins -= trans_amount;
                 }
-                console.log(trans_amount, giverCoins, receiverCoins);
-
+                // console.log(trans_amount, giverCoins, receiverCoins);
                 db.query(`UPDATE ?? SET coins=? WHERE id=?`, [game, receiverCoins, receiverId], (err) => {
                     if (err) console.log(err);
                 });
@@ -155,65 +169,47 @@ function coin_transactions(code, giverId, receiverId, trans_amount, callback) {
                 });
                 let coins = [receiverCoins, giverCoins];
                 callback(null, coins);
-
                 // let giverCoins = res[0];
             })
         }
     })
 }
 
-// move this to game_functions
-function get_player_cards(game, id) {
-    return new Promise((resolve, reject) => {
-        db.query(`SELECT card_1, card_2 FROM ?? WHERE id=?`, [game, id], (err, res) => {
-            if (err) console.log(err);
-            else {
-                resolve(res[0]);
-            }
-        });
-    })
-
-}
-
 /**
- * Update the turn order if a player is eliminated.
+ * Updates the turn order and marks player as eliminated. 
+ * @param {*} code game identifier
+ * @param {*} elim_id eliminated player's id
+ * @param {*} elim_turn eliminated player's turn
+ * @returns winner or null (returned from end_game function call)
  */
 async function eliminated(code, elim_id, elim_turn) {
     return new Promise((resolve, reject) => {
         db.query(`SELECT turnOrder, id FROM ??`, [`gd${code}`], (err, res) => {
             if (err) console.log(err);
             else {
-                // console.log(res);
                 let turns_and_ids = res;
-                // console.log("184", turns_and_ids);
-
                 for (let i = 0; i < turns_and_ids.length; i++) {
                     if (turns_and_ids[i].id !== -1 && turns_and_ids[i].turnOrder > elim_turn) {
                         db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`,
                             [`gd${code}`, turns_and_ids[i].turnOrder - 1, turns_and_ids[i].id], (err, res_) => {
                                 if (err) console.log(err);
-                                // else console.log(res_);
                             });
                     }
                     else if (turns_and_ids[i].id === elim_id) {
                         db.query(`UPDATE ?? SET turnOrder=? WHERE id=?`,
                             [`gd${code}`, -2, turns_and_ids[i].id], (err, res_) => {
                                 if (err) console.log(err);
-                                // else console.log(res_);
                             });
                         db.query(`SELECT playing FROM ?? WHERE code=?`, ['current_games', code], (err, res_) => {
                             if (err) console.log(err);
                             else {
-                                // console.log(res_);
                                 let count = res_[0].playing - 1;
                                 console.log("count", count);
                                 db.query(`UPDATE ?? SET playing=? WHERE code=?`, ['current_games', count, code], (err, res__) => {
                                     if (err) console.log(err);
                                     else {
                                         if (count === 1) {
-                                            // console.log(code, elim_id);
                                             const winner = end_game(code, elim_id);
-                                            // console.log(winner);
                                             resolve(winner);
                                         }
                                         else resolve(null);
@@ -229,6 +225,12 @@ async function eliminated(code, elim_id, elim_turn) {
 
 }
 
+/**
+ * Check's if game is over. Called when player is eliminated. 
+ * @param {*} code game code
+ * @param {*} elim_id eliminated player's id
+ * @returns winner
+ */
 function end_game(code, elim_id) {
     return new Promise((resolve, reject) => {
         db.query(`SELECT * FROM gd${code} WHERE turnOrder!=-2 AND id NOT IN (?)`, [[-1, elim_id]], (err, res) => {
@@ -246,14 +248,17 @@ function end_game(code, elim_id) {
     })
 }
 
+/**
+ * Performs card deletion. 
+ * @param {*} code game code
+ * @param {*} id player who is losing id
+ * @param {*} card card to be deleted
+ * @param {*} callback informs process completion
+ */
 async function delete_card(code, id, card, callback) {
     let game = "gd" + code;
     let card_game = "cd" + code;
-    let cards = await get_player_cards(game, id);
-    // if (!cards.card_1 || !cards.card_2) {
-    //     // change the 
-
-    // }
+    let cards = await sql_db.getPlayerCards(game, id);
     let card_index = cards.card_1 === card ? 1 : 2;
 
     db.query(`UPDATE ?? SET card_${card_index}=? WHERE id=?`, [game, null, id], (err, res) => {
@@ -264,11 +269,9 @@ async function delete_card(code, id, card, callback) {
                 if (err) console.log(err);
                 else {
                     let num_in_deck = res_[0].num;
-                    // console.log(num_in_deck);
                     db.query(`UPDATE ?? SET num=? WHERE id=?`, [card_game, num_in_deck + 1, card], (err, res__) => {
                         if (err) console.log(err);
                         else {
-                            // console.log(res__);
                             callback("completed");
                         }
                     })
@@ -327,11 +330,12 @@ async function delete_card(code, id, card, callback) {
  * when player is eliminated, coins go to bank
  */
 
+
+/** exports */
 module.exports = {
     update_game_turn,
     distribute_cards,
     coin_transactions,
-    get_player_cards,
     eliminated,
     delete_card,
 }

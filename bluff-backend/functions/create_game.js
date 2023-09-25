@@ -1,15 +1,19 @@
 const db = require('../config/db');
 
+/**
+ * creates a game instance and the necessary tables
+ * @param {*} io 
+ * @param {*} req identification data
+ * @param {*} res sends game completion message to client
+ */
 function createGame(io, req, res) {
-    // console.log("id in createGame: " + socket_id);
-
     // check if it exists and if not let it be a valid code
     // let code = Math.floor(100000 + Math.random() * 900000) 
-    let code = Math.floor(100 + Math.random() * 999); // should be above
+    // replace below or use more robust randomization
+    let code = Math.floor(100 + Math.random() * 999);
     let id = Math.floor(100000 + Math.random() * 900000);
     let card_data = "cd" + code;
     let game_data = "gd" + code;
-
     let socket_id = req.body.socket_id;
     let username = req.body.username;
     let new_cards = [
@@ -21,13 +25,11 @@ function createGame(io, req, res) {
             console.log(err);
         }
     })
-
     db.query(`INSERT INTO current_games (code, player_count, playing) VALUES ('${code}', 1, 1)`, (err, result) => {
         if (err) {
             console.log(err);
         }
     })
-
     db.query(`CREATE TABLE ${game_data} (id int, username text, coins int, card_1 text, card_2 text, turnOrder int, countering tinyint)`, (err, result) => {
         if (err) {
             console.log(err);
@@ -42,7 +44,6 @@ function createGame(io, req, res) {
                 })
         }
     })
-
     db.query(`CREATE TABLE ${card_data} (id text, num int, r1 tinyint, r2 tinyint, r3 tinyint)`, (err, result) => {
         if (err) {
             console.log(err);
@@ -60,10 +61,9 @@ function createGame(io, req, res) {
             res.send(result);
         }
     })
-
-
 }
 
+/** exports */
 module.exports = {
     createGame,
 }

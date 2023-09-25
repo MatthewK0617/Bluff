@@ -13,6 +13,8 @@ const game_actions_handler = require('./functions/game_actions_handler.js');
 const db = require('./config/db');
 
 const app = express();
+
+// broken
 const faviconPath = path.join(__dirname, 'public', 'favicon.ico')
 // console.log(faviconPath);
 app.use(favicon(faviconPath));
@@ -25,7 +27,7 @@ const corsOptions = {
         ? "https://bluff.netlify.app" : "*",
     methods: ["GET", "POST"]
 };
-console.log(corsOptions.origin);
+// console.log(corsOptions.origin);
 
 app.use(express.json()); // enable json parsing
 app.use(express.urlencoded({ extended: true })); // enable URL-encoded data parsing
