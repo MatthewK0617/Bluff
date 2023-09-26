@@ -167,8 +167,6 @@ export default function Actions({ code, id, action, setAction,
                             v && <div key={i} className="card-specific-options">
                                 <div>{actionsRules[i].type} {v}</div>
 
-                                {/* {lastAction && lastAction.card === "poi" && <div>asdasd</div>} */}
-
                                 {!isCounter && actionsRules[i].desc_r1 !== "" && (
                                     <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : console.log("1")}>
                                         {actionsRules[i].desc_r1}

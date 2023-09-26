@@ -382,7 +382,8 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
 
                     {(action && action.defenderId)
                         && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
-                    {lastAction && <div className="turn-display">{lastAction.id} used {lastAction.card} on {lastAction.defenderId}</div>}
+
+                    {/* {lastAction && <div className="turn-display">{lastAction.id} used {lastAction.card} on {lastAction.defenderId}</div>} */}
 
                     {<div className="usable-cards">
                         <Actions code={code} id={id} action={action} setAction={setAction}
