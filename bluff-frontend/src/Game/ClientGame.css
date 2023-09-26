@@ -238,6 +238,23 @@ html {
     border: 0.1rem solid #fffff0;
 }
 
+.turn-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2e303a;
+    box-sizing: border-box;
+    border: 0.1rem solid transparent;
+    border-radius: 0.1rem;
+    padding: 0.4rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    color: green;
+    position: absolute;
+    font-size: large;
+    /* left: 10vw; */
+    top: 20vh;
+}
+
 .usable-cards {
     position: absolute;
     bottom: 0vh;

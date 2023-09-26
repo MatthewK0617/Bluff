@@ -12,8 +12,8 @@ export default function Actions({ code, id, action, setAction,
     let [actionsRules, setActionsRules] = useState([]);
 
     const counters = {
-        "ass": ["con"],
-        "cap": ["cap"],
+        "poi": ["ant"],
+        "mas": ["mas"],
     };
 
     useEffect(() => {
@@ -61,15 +61,15 @@ export default function Actions({ code, id, action, setAction,
         const newSelectedArray = [false, false, false, false, false, false];
         if (action_name === "coins") {
             newSelectedArray[0] = !selectedArray[0];
-        } else if (action_name === "amb") {
+        } else if (action_name === "sle") {
             newSelectedArray[1] = !selectedArray[1];
-        } else if (action_name === "ass") {
+        } else if (action_name === "poi") {
             newSelectedArray[2] = !selectedArray[2];
-        } else if (action_name === "cap") {
+        } else if (action_name === "mas") {
             newSelectedArray[3] = !selectedArray[3];
-        } else if (action_name === "con") {
+        } else if (action_name === "ant") {
             newSelectedArray[4] = !selectedArray[4];
-        } else if (action_name === "duk") {
+        } else if (action_name === "pur") {
             newSelectedArray[5] = !selectedArray[5];
         }
         setSelectedArray(newSelectedArray);
@@ -82,11 +82,11 @@ export default function Actions({ code, id, action, setAction,
 
     const actionHandler = (card, rule) => { // maybe change this to primary action
         if (card === "def") actionCreator("def", rule, -1);
-        else if (card === "amb") { }
-        else if (card === "ass") actionCreator("ass", rule, null);
-        else if (card === "cap") actionCreator("cap", rule, null); // null will change in selectplayer
-        else if (card === "con") { actionCreator("con", rule, null); }
-        else if (card === "duk") rule === 1 ? actionCreator("duk", rule, -1) : actionCreator("duk", rule, null);
+        else if (card === "sle") { }
+        else if (card === "poi") actionCreator("poi", rule, null);
+        else if (card === "mas") actionCreator("mas", rule, null); // null will change in selectplayer
+        else if (card === "ant") { actionCreator("ant", rule, null); }
+        else if (card === "pur") rule === 1 ? actionCreator("pur", rule, -1) : actionCreator("pur", rule, null);
     }
 
     const actionCreator = (card, rule, defenderId) => {
@@ -155,7 +155,7 @@ export default function Actions({ code, id, action, setAction,
                     }
                     {cards.map((v, i) => {
                         return (
-                            // implement amb later 
+                            // implement sle later 
                             i !== 0 && <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
                                 {v.id}
                             </div>
@@ -167,7 +167,7 @@ export default function Actions({ code, id, action, setAction,
                             v && <div key={i} className="card-specific-options">
                                 <div>{actionsRules[i].type} {v}</div>
 
-                                {lastAction && lastAction.card === "ass" && <div>asdasd</div>}
+                                {/* {lastAction && lastAction.card === "poi" && <div>asdasd</div>} */}
 
                                 {!isCounter && actionsRules[i].desc_r1 !== "" && (
                                     <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : console.log("1")}>
@@ -189,7 +189,6 @@ export default function Actions({ code, id, action, setAction,
                                     )
                                 }
                             </div>
-                            // </div>
                         )
                     })}
                 </div>}

@@ -1,0 +1,27 @@
+.info-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #202123;
+    cursor: default;
+    margin-top: 22vh;
+}
+
+.info-div-1 {
+    font-size: 1rem;
+    padding: 1px;
+    /* position: relative; */
+    /* top: 15vh; */
+    color: whitesmoke;
+}
+
+.info-div-2 {
+    font-size: 1rem;
+    margin-top: 0.3rem;
+    padding: 1px;
+    /* position: relative; */
+    /* top: 15vh; */
+    color: whitesmoke;
+}

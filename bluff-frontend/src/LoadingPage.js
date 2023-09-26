@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './LoadingPage.css'
+import Info from './Game/Info';
 
 export default function LoadingPage() {
     const string = 'Bluff.'
@@ -29,6 +30,7 @@ export default function LoadingPage() {
                     </span>
                 ))}
             </div>
+            <Info />
             <Link className='loading-page-links' to='/settings'>
                 <div>
                     Create Game

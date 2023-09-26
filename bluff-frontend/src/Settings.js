@@ -9,37 +9,37 @@ import { Link } from "react-router-dom";
 export default function Settings({ socket, code, setCode, id, setId, setOpps }) {
     // change this to pull from template
     const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
-    const [cards, setCards] = React.useState([
+    const [cards, setCards] = React.useState([ // to change these, have to change in db
         {
             id: 'amb',
             num: 4,
-            r1: true, 
+            r1: true,
             r2: true,
             r3: true
         },
         {
-            id: 'ass',
+            id: 'poi',
             num: 4,
             r1: true,
             r2: true,
             r3: true
         },
         {
-            id: 'cap',
+            id: 'mas',
             num: 4,
             r1: true,
             r2: true,
             r3: true
         },
         {
-            id: 'con',
+            id: 'ant',
             num: 4,
             r1: true,
             r2: true,
             r3: true
         },
         {
-            id: 'duk',
+            id: 'pur',
             num: 4,
             r1: true,
             r2: true,
@@ -51,11 +51,11 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
         await Axios.post(`${baseURL}createGame`, {
             socket_id: socket.id, // **** fix variable names ****
             username: "user_input", // make user input for game creator
-            amb: cards[0],
-            ass: cards[1],
-            cap: cards[2],
-            con: cards[3],
-            duk: cards[4],
+            sle: cards[0],
+            poi: cards[1],
+            mas: cards[2],
+            ant: cards[3],
+            pur: cards[4],
         }).catch((err) => {
             console.log(err);
         })
@@ -94,16 +94,14 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
             <div className="settings-wrapper-2">
                 {Array.from(cards).map((v, i) => {
                     return (
-                        <div className="counter" key={i}>
+                        v.id !== "amb" && <div className="counter" key={i}>
                             <Cards card={v} cards={cards} setCards={setCards} code={code} />
                         </div>
                     );
                 })}
             </div>
-
             <Link className="settings-links" to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
             <Link className="settings-links" to='/'> Back </Link>
-
         </div>
     )
 }
