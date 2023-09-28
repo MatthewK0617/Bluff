@@ -375,7 +375,7 @@ function joinGame(game_code) {
                 }));
                 for (let i = 0; i < players.length; i++) {
                     db.query(`INSERT INTO ${game_data} (id, username, coins, turnOrder, countering) 
-                    VALUES (?, ?, ?, ?, ?)`, [players[i].id, players[i].name, 100, i, 0], (err, res_) => {
+                    VALUES (?, ?, ?, ?, ?)`, [players[i].id, players[i].name, 2, i, 0], (err, res_) => {
                         if (err) console.log(err);
                         else {
                             db.query(`DELETE FROM current_players WHERE id=?`, [players[i].id], (err, res__) => {
