@@ -30,7 +30,17 @@ function handler(io, code, action) {
                 });
             }
         }
-        else if (action.card === "cha") { }
+        else if (action.card === "cha") {
+            if (action.rule === 1) { /** later **/ }
+            else {
+                game_actions.coin_transactions(code, action.defenderId, action.id, 2, (err, res) => {
+                    if (err) console.log(err);
+                    else {
+                        coins = res;
+                    }
+                })
+            }
+        }
         else if (action.card === "poi") {
             // attacker loses coins for this
             game_actions.coin_transactions(code, action.id, -1, 3, (err, res) => {

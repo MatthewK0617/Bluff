@@ -291,7 +291,7 @@ async function delete_card(code, id, card, callback) {
 /**
  * change attributes
  * r1: get 2 cards, and return any 2 cards
- * r2: block 2 coin gain
+ * r2: block steal
  */
 
 /**
@@ -313,6 +313,7 @@ async function delete_card(code, id, card, callback) {
 /**
  * purse
  * r1: take 3 coins 
+ * r2: block 2 coin gain
  */
 
 /** implement this later
