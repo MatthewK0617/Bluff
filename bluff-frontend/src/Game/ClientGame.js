@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Axios from 'axios';
+import { GiPoisonBottle, GiHealthPotion, GiDualityMask, GiShinyPurse, GiDeathSkull, GiBank, GiCardExchange } from 'react-icons/gi';
 
 import './ClientGame.css';
 import Actions from "./Actions";
@@ -8,6 +9,7 @@ import EndPage from "./EndPage";
 function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
     const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
     let [cards, setCards] = useState([null, null]);
+    let [coins, setCoins] = useState(null);
     let [turn, setTurn] = useState(-2);
     let [isTurn, setIsTurn] = useState(false);
     let [isCounter, setIsCounter] = useState(false); // store
@@ -62,6 +64,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                             let playerturn = v.turnOrder;
                             setTurn(playerturn);
                             setCards([v.c1, v.c2]);
+                            setCoins(v.coins);
                             if (gameturn === playerturn) setIsTurn(true);
                             else setIsTurn(false);
                             opponents.push(v);
@@ -153,7 +156,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
 
             // handling counters
             socket.on('counters', (_action) => {
-                console.log("handle counter");
+                // console.log("handle counter");
                 setOriginalAction(_action);
                 handleAttack(_action);
             });
@@ -219,7 +222,6 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
             }).then((res) => {
                 let opponents = [];
                 let gameturn = -1;
-                console.log('why');
                 res.data.forEach((v) => {
                     if (v.id === -1) {
                         gameturn = v.turnOrder;
@@ -232,6 +234,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                                 // Calculate the new 'turn' based on 'prevTurn' and 'v.turnOrder'
                                 return v.turnOrder !== prevTurn ? v.turnOrder : prevTurn;
                             });
+                            setCoins(v.coins);
                         }
                         if (gameturn === v.turnOrder) setIsTurn(true);
                         else setIsTurn(false);
@@ -333,15 +336,12 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                         return (
                             <div key={i} className="players">
                                 {v.id === -1 ?
-                                    isTurn ?
-                                        (<div className="game-div">{v.coins}</div>) // should be when card is selected
-                                        :
-                                        (<div className="nt-game-div">{v.coins}</div>)
+                                    (<div className="game-div">{v.coins}</div>) // should be when card is selected
                                     :
                                     v.id !== id ?
                                         (action && !isCounter) ?
                                             action.defenderId ?
-                                                (<div className="nt-opponents">
+                                                (<div className="opponents nt">
                                                     <div className="name">{v.name}</div>
                                                     <div className="coins">{v.coins}</div>
                                                 </div>)
@@ -351,7 +351,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                                                     <div className="coins">{v.coins}</div>
                                                 </div>)
                                             :
-                                            (<div className="nt-opponents">
+                                            (<div className="opponents nt">
                                                 <div className="name">{v.name}</div>
                                                 <div className="coins">{v.coins}</div>
                                             </div>)
@@ -366,7 +366,13 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                                                             v &&
                                                             <div key={i} className={`${loseCard ? 'card-lose' : 'card'}`}
                                                                 onClick={loseCard ? (_) => deleteCard(v) : undefined}
-                                                            >{v}</div>
+                                                            >
+                                                                <div>{v === "cha" && <GiCardExchange className="icon-div" />}</div>
+                                                                <div>{v === "poi" && <GiDeathSkull className="icon-div" />}</div>
+                                                                <div>{v === "mas" && <GiDualityMask className="icon-div" />}</div>
+                                                                <div>{v === "ant" && <GiHealthPotion className="icon-div" />}</div>
+                                                                <div>{v === "pur" && <GiShinyPurse className="icon-div" />}</div>
+                                                            </div>
                                                         )
                                                     })}
                                                 </div>
@@ -383,7 +389,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                     {(action && action.defenderId)
                         && <div className="end-turn" onClick={(_) => endTurn()}>End Turn</div>}
 
-                    {/* {lastAction && <div className="turn-display">{lastAction.id} used {lastAction.card} on {lastAction.defenderId}</div>} */}
+                    {/* {lastAction && <div className="turn-display">{lastAction.id} / {lastAction.card} / {lastAction.defenderId}</div>} */}
 
                     {<div className="usable-cards">
                         <Actions code={code} id={id} action={action} setAction={setAction}
@@ -391,16 +397,8 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                             isTurn={isTurn} isCounter={isCounter} selectedArray={selectedArray}
                             setSelectedArray={setSelectedArray} lastAction={lastAction}
                             setLastAction={setLastAction} opps={opps} socket={socket}
-                            originalAction={originalAction} />
+                            originalAction={originalAction} coins={coins} />
                     </div>}
-                    {/* Actions should be more dynamic. pass in array of counters
-                    based on what is pulled from db
-                    
-                    if isCounter check lastAction === counters (pulled from db)
-                    if notCounter send the card options (nothing to counter)
-                    decide if i want to filter out and not even show card options 
-                        if not turn
-                    /*/}
                 </div>
             }
             {winner && <EndPage winner={winner} code={code} id={id} />}

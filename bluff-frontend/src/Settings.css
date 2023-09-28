@@ -59,7 +59,16 @@ input[type=Submit] {
     box-sizing: border-box;
 }
 
+.settings-links-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .settings-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #000000;
     font-style: normal;
     text-decoration: none;
@@ -70,6 +79,7 @@ input[type=Submit] {
     border: 0.1rem solid transparent;
     border-radius: 0.4rem;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    width: 4rem;
 }
 
 .settings-links:hover {

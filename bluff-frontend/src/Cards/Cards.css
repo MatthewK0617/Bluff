@@ -1,0 +1,41 @@
+.inner-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    margin: 0.2rem;
+    /* flex-direction: column; */
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.2rem;
+    margin-left: 0.2rem;
+    font-size: 3.5rem;
+    /* Adjust the margin as needed */
+}
+
+.value {
+    font-size: 1.5rem;
+}
+
+.value-changer {
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+}
+
+.value-changer:hover {
+    color: rgb(206, 66, 66);
+}

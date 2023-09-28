@@ -7,51 +7,20 @@ import Cards from "./Cards/Cards";
 import { Link } from "react-router-dom";
 
 export default function Settings({ socket, code, setCode, id, setId, setOpps }) {
-    // change this to pull from template
     const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
-    const [cards, setCards] = React.useState([ // to change these, have to change in db
-        {
-            id: 'amb',
-            num: 4,
-            r1: true,
-            r2: true,
-            r3: true
-        },
-        {
-            id: 'poi',
-            num: 4,
-            r1: true,
-            r2: true,
-            r3: true
-        },
-        {
-            id: 'mas',
-            num: 4,
-            r1: true,
-            r2: true,
-            r3: true
-        },
-        {
-            id: 'ant',
-            num: 4,
-            r1: true,
-            r2: true,
-            r3: true
-        },
-        {
-            id: 'pur',
-            num: 4,
-            r1: true,
-            r2: true,
-            r3: true
-        }
+    const [cards, setCards] = React.useState([
+        { id: 'cha', num: 4, r1: false, r2: true, },
+        { id: 'poi', num: 4, r1: true, r2: false, },
+        { id: 'mas', num: 4, r1: true, r2: true, },
+        { id: 'ant', num: 4, r1: false, r2: true, },
+        { id: 'pur', num: 4, r1: true, r2: true, }
     ]);
 
     const onCreateGame = async () => {
         await Axios.post(`${baseURL}createGame`, {
             socket_id: socket.id, // **** fix variable names ****
             username: "user_input", // make user input for game creator
-            sle: cards[0],
+            cha: cards[0],
             poi: cards[1],
             mas: cards[2],
             ant: cards[3],
@@ -100,8 +69,10 @@ export default function Settings({ socket, code, setCode, id, setId, setOpps }) 
                     );
                 })}
             </div>
-            <Link className="settings-links" to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
-            <Link className="settings-links" to='/'> Back </Link>
+            <div className="settings-links-wrapper">
+                <Link className="settings-links" to='/'> Back </Link>
+                <Link className="settings-links" to='/waiting' onClick={(_) => onCreateGame()}>Create</Link>
+            </div>
         </div>
     )
 }

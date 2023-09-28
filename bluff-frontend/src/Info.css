@@ -1,0 +1,51 @@
+.info-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    background-color: #202123;
+    cursor: default;
+    /* padding-top: 10%; */
+    /* margin-top: 15vh; */
+}
+
+.info-div-1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    padding: 0.4rem;
+    color: rgb(197, 189, 189);
+}
+
+.header {
+    color: white;
+}
+
+.central {
+    align-self: center; /* Overrides align-items for the first child */
+  }
+
+.icon-gap {
+    margin-right: 1vw;
+    margin-left: 1vw;
+    font-size: 3.5rem;
+    /* Adjust the margin as needed */
+}
+
+.info-div-2 {
+    font-size: 1.5rem;
+    margin-top: 0.3rem;
+    padding: 1px;
+    /* position: relative; */
+    /* top: 15vh; */
+    color: whitesmoke;
+}
+
+.info-div-space {
+    color: yellow;
+    font-size: 1.4rem;
+    margin-top: 1rem;
+    padding: 1px;
+}

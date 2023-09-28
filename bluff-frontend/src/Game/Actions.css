@@ -10,8 +10,8 @@
     align-items: center;
     justify-content: center;
     background-color: #000000;
-    height: 10vh;
-    width: 10vw;
+    height: 5rem;
+    width: 5rem;
     border: 0.1rem solid #fffff0;
     margin: 0.2rem;
     padding: 0.4rem;
@@ -30,8 +30,8 @@
     align-items: center;
     justify-content: center;
     background-color: #000000;
-    height: 15vh;
-    width: 10vw;
+    height: 5rem;
+    width: 5rem;
     border: 0.1rem solid #fffff0;
     margin: 0.2rem;
     padding: 0.4rem;
@@ -49,8 +49,8 @@
     align-items: center;
     justify-content: center;
     background-color: #000000;
-    height: 15vh;
-    width: 10vw;
+    height: 5rem;
+    width: 5rem;
     border: 0.1rem solid green;
     margin: 0.2rem;
     padding: 0.4rem;
@@ -82,20 +82,32 @@
 
 .counter-actions {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    bottom: 40%;
-    left: 30%;
-    width: 10vw;
-    height: 10vh;
-    transform: translateX(-50%);
-    background-color: white;
-    border: 0.1rem solid transparent;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    padding: 1rem;
-    border-radius: 0.2rem;
-    font-size: 1.5rem;
-    order: 0;
+    /* background-color: #000000; */
+    height: 5rem;
+    width: 5rem;
+    /* border: 0.1rem solid green; */
+    /* margin: 0.2rem; */
+    /* padding: 0.4rem; */
+    color: #b5b8c0;
+    font-size: x-large;
+}
+
+.counter-actions-specific {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000000;
+    height: 5rem;
+    min-width: 5rem;
+    border: 0.1rem solid green;
+    margin: 0.2rem;
+    padding: 0.4rem;
+    color: #b5b8c0;
+    font-size: x-large;
+}
+
+.counter-actions-specific:hover {
+    border: 0.1rem solid yellow;
 }

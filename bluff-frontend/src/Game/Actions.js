@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Axios from "axios";
+import { GiPoisonBottle, GiHealthPotion, GiDualityMask, GiShinyPurse, GiDeathSkull, GiBank, GiCardExchange } from 'react-icons/gi';
+
 
 import './Actions.css';
 
 export default function Actions({ code, id, action, setAction,
     counterAction, setCounterAction, isTurn, isCounter,
     selectedArray, setSelectedArray, lastAction, setLastAction,
-    opps, socket, originalAction }) {
+    opps, socket, originalAction, coins }) {
     const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
     const [cards, setCards] = useState([]);
     let [actionsRules, setActionsRules] = useState([]);
 
     const counters = {
+        "def": ["pur"],
         "poi": ["ant"],
-        "mas": ["mas"],
+        "mas": ["mas", "cha"],
     };
 
     useEffect(() => {
@@ -40,7 +43,6 @@ export default function Actions({ code, id, action, setAction,
                             if (v.num > 0)
                                 tempCards.push(v);
                         });
-                        // console.log(tempCards);
                         setCards(tempCards);
                         window.sessionStorage.setItem('cards', JSON.stringify(tempCards));
                     })
@@ -57,11 +59,15 @@ export default function Actions({ code, id, action, setAction,
         }
     }, [code, baseURL]);
 
+    /**
+     * Currently only toggling withdrawal.
+     * @param {String} action_name 
+     */
     const toggleActionRules = (action_name) => {
         const newSelectedArray = [false, false, false, false, false, false];
         if (action_name === "coins") {
             newSelectedArray[0] = !selectedArray[0];
-        } else if (action_name === "sle") {
+        } else if (action_name === "cha") {
             newSelectedArray[1] = !selectedArray[1];
         } else if (action_name === "poi") {
             newSelectedArray[2] = !selectedArray[2];
@@ -81,9 +87,12 @@ export default function Actions({ code, id, action, setAction,
     }
 
     const actionHandler = (card, rule) => { // maybe change this to primary action
+        setSelectedArray([false, false, false, false, false, false]);
         if (card === "def") actionCreator("def", rule, -1);
-        else if (card === "sle") { }
-        else if (card === "poi") actionCreator("poi", rule, null);
+        else if (card === "cha") { actionCreator("cha", rule, null); }
+        else if (card === "poi") {
+            if (coins >= 3) actionCreator("poi", rule, null);
+        }
         else if (card === "mas") actionCreator("mas", rule, null); // null will change in selectplayer
         else if (card === "ant") { actionCreator("ant", rule, null); }
         else if (card === "pur") rule === 1 ? actionCreator("pur", rule, -1) : actionCreator("pur", rule, null);
@@ -93,6 +102,7 @@ export default function Actions({ code, id, action, setAction,
         // toggling actions on and off
         if (action !== null) {
             setAction(null);
+            console.log("here");
             return;
         }
         // creating action object
@@ -109,11 +119,11 @@ export default function Actions({ code, id, action, setAction,
             setAction(actionObj);
         }
         else {
-            console.log(counterAction);
+            // console.log(counterAction);
             actionObj.defenderId = counterAction.defenderId;
             setCounterAction(actionObj);
         }
-        console.log(actionObj);
+        // console.log(actionObj);
     }
 
     const sendCounters = (v) => {
@@ -133,7 +143,8 @@ export default function Actions({ code, id, action, setAction,
             setLastAction((prev) => ({
                 ...prev,
                 card: "allow",
-            })); // defender is the one that allowed
+            }));
+            console.log(lastAction);
             // lastAction passed in does not have card set to allow. in fact, prob shouldnt
             socket.emit("counter", code, lastAction, opps.length - 1, v, originalAction);
         }
@@ -144,20 +155,35 @@ export default function Actions({ code, id, action, setAction,
             {!isCounter &&
                 <div className="actions-wrapper">
                     {isTurn &&
-                        <div className="take-coins-action" onClick={(_) => toggleActionRules('coins')}>
-                            Coins
+                        <div className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules('coins')}>
+                            <GiBank className="icon-div" />
                         </div>
                     }
                     {!isTurn &&
-                        <div className="take-coins-action">
-                            Coins
+                        <div className={`card-base${isTurn ? '-turn' : ''}`}>
+                            <GiBank className="icon-div" />
                         </div>
                     }
                     {cards.map((v, i) => {
+                        let temp = 1;
+                        if (isCounter) {
+                            if (v.r2 === 0) return null;
+                            else temp = 2;
+                        }
+                        else if (!isCounter) {
+                            if (v.r1 === 0) return null;
+                            else temp = 1;
+                        }
+
                         return (
-                            // implement sle later 
-                            i !== 0 && <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={(_) => toggleActionRules(v.id)}>
-                                {v.id}
+                            <div key={i} className={`card-base${isTurn ? '-turn' : ''}`} onClick={isTurn ? () => actionHandler(actionsRules[i + 1].type, temp) : undefined}>
+                                <div>
+                                    <div>{v.id === "cha" && <GiCardExchange className="icon-div" />}</div>
+                                    <div>{v.id === "poi" && <GiPoisonBottle className="icon-div" />}</div>
+                                    <div>{v.id === "mas" && <GiDualityMask className="icon-div" />}</div>
+                                    <div>{v.id === "ant" && <GiHealthPotion className="icon-div" />}</div>
+                                    <div>{v.id === "pur" && <GiShinyPurse className="icon-div" />}</div>
+                                </div>
                             </div>
                         )
                     })}
@@ -165,39 +191,45 @@ export default function Actions({ code, id, action, setAction,
                         return (
                             // flip the card over to see the actions you can take
                             v && <div key={i} className="card-specific-options">
-                                <div>{actionsRules[i].type} {v}</div>
 
-                                {!isCounter && actionsRules[i].desc_r1 !== "" && (
-                                    <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : console.log("1")}>
-                                        {actionsRules[i].desc_r1}
-                                    </div>
-                                )}
-                                {actionsRules[i].type === "def" ?
-                                    (actionsRules[i].desc_r2 !== "" && (
-                                        <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : console.log("1a")}>
+                                {selectedArray[0] && actionsRules[i].type === "def" && !isCounter && (
+                                    <div>
+                                        <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 1) : undefined}>
+                                            {actionsRules[i].desc_r1}
+                                        </div>
+                                        <div onClick={isTurn ? () => actionHandler(actionsRules[i].type, 2) : undefined}>
                                             {actionsRules[i].desc_r2}
                                         </div>
-                                    )
-                                    ) :
+                                    </div>
+                                )}
+                                {/* {actionsRules[i].type !== "def" &&
                                     (lastAction && lastAction.rule !== 2 && isCounter && actionsRules[i].desc_r2 !== "" && (
-                                        <div onClick={lastAction && lastAction.defenderId === id ? () => actionHandler(actionsRules[i].type, 2) : console.log(lastAction)}>
+                                        <div onClick={lastAction && lastAction.defenderId === id ? () => actionHandler(actionsRules[i].type, 2) : undefined}>
                                             {actionsRules[i].desc_r2} {id}
                                         </div>
                                     )
                                     )
-                                }
+                                } */}
                             </div>
                         )
                     })}
                 </div>}
             {isCounter && counterAction && counterAction.defenderId !== id &&
                 <div className="counter-actions">
-                    {lastAction.defenderId === id && <div onClick={(_) => sendCounters("allow")}>Allow</div>}
-                    <div onClick={(_) => sendCounters("bs")}>BS</div>
+                    {(lastAction.defenderId === id || (lastAction.card === "def" && lastAction.rule === 2)) &&
+                        <div className="counter-actions-specific" onClick={(_) => sendCounters("allow")}>Allow</div>}
+                    <div className="counter-actions-specific" onClick={(_) => sendCounters("bs")}>Show</div>
                     {/* map the new options here */}
-                    {lastAction && lastAction.defenderId === id && lastAction.rule === 1 && counters[lastAction.card] &&
-                        counters[lastAction.card].map((v, i) => (
-                            <div key={i} onClick={() => actionHandler(v, 2)}>{v}</div>
+                    {lastAction && (lastAction.defenderId === id || (lastAction.rule === 2 && lastAction.card === "def")) &&
+                        (lastAction.rule === 1 || (lastAction.rule === 2 && lastAction.card === "def"))
+                        && counters[lastAction.card] && counters[lastAction.card].map((v, i) => (
+                            <div key={i} className="counter-actions-specific" onClick={() => actionHandler(v, 2)}>
+                                <div>{v === "cha" && <GiCardExchange className="icon-div" />}</div>
+                                <div>{v === "poi" && <GiDeathSkull className="icon-div" />}</div>
+                                <div>{v === "mas" && <GiDualityMask className="icon-div" />}</div>
+                                <div>{v === "ant" && <GiHealthPotion className="icon-div" />}</div>
+                                <div>{v === "pur" && <GiShinyPurse className="icon-div" />}</div>
+                            </div>
                         ))}
                 </div>}
         </div>

@@ -1,18 +1,20 @@
 import React from "react";
 import Axios from 'axios';
+import { GiHealthPotion, GiDualityMask, GiShinyPurse, GiDeathSkull, GiCardExchange } from 'react-icons/gi';
+import { AiOutlinePlusCircle, AiOutlineMinusCircle } from 'react-icons/ai';
+import './Cards.css';
 
 export default function Cards({ card, cards, setCards, code }) {
     let [card2, setCard2] = React.useState(card);
-    const baseURL = "http://localhost:8000/";
+    const baseURL = process.env.REACT_APP_URL || "http://localhost:8000/";
 
-    const updateData = (card) => {
+    const updateData = () => {
         Axios.post(`${baseURL}updateCardData`, {
             curr_game: code,
             "id": card2.id,
             num: card2.num,
             r1: card2.r1,
             r2: card2.r2,
-            r3: card2.r3,
         })
             .then((res) => {
                 console.log(res);
@@ -34,7 +36,7 @@ export default function Cards({ card, cards, setCards, code }) {
         });
 
         if (code !== "") {
-            updateData(card2);
+            updateData();
         }
     };
 
@@ -68,16 +70,22 @@ export default function Cards({ card, cards, setCards, code }) {
 
     return (
         <div>
-            <div>{card2.id}</div>
+            <div className="icon-wrapper">
+                <div>{card2.id === "cha" && <GiCardExchange className="icon-div" />}</div>
+                <div>{card2.id === "poi" && <GiDeathSkull className="icon-div" />}</div>
+                <div>{card2.id === "mas" && <GiDualityMask className="icon-div" />}</div>
+                <div>{card2.id === "ant" && <GiHealthPotion className="icon-div" />}</div>
+                <div>{card2.id === "pur" && <GiShinyPurse className="icon-div" />}</div>
+            </div>
+
             <div className="inner-counter">
-                <div onClick={onDecrement}>-</div>
-                <div>{card2.num}</div>
-                <div onClick={onIncrement}>+</div>
+                <div onClick={onDecrement} className="value-changer"><AiOutlineMinusCircle /></div>
+                <div className="value">{card2.num}</div>
+                <div onClick={onIncrement} className="value-changer"><AiOutlinePlusCircle /></div>
             </div>
             <div className="card-rules">
-                <div onClick={() => toggleRule('r1')}>{card2.r1 ? "true" : "false"}</div>
-                <div onClick={() => toggleRule('r2')}>{card2.r2 ? "true" : "false"}</div>
-                <div onClick={() => toggleRule('r3')}>{card2.r3 ? "true" : "false"}</div>
+                {/* <div onClick={() => toggleRule('r1')}>{card2.r1 ? "true" : "false"}</div> */}
+                {/* <div onClick={() => toggleRule('r2')}>{card2.r2 ? "true" : "false"}</div> */}
             </div>
         </div>
     );
