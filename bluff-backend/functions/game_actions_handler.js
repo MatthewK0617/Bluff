@@ -91,6 +91,7 @@ function handler(io, code, action) {
                 })
             }
         }
+        // else if (action.card === "")
 
         resolve("resolved");
     });

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Axios from 'axios';
-import { GiPoisonBottle, GiHealthPotion, GiDualityMask, GiShinyPurse, GiDeathSkull, GiBank, GiCardExchange } from 'react-icons/gi';
+import { GiPoisonBottle, GiHealthPotion, GiDualityMask, GiShinyPurse, GiCardExchange } from 'react-icons/gi';
 
 import './ClientGame.css';
 import Actions from "./Actions";
@@ -368,7 +368,7 @@ function ClientGame({ code, setCode, id, setId, opps, setOpps, socket }) {
                                                                 onClick={loseCard ? (_) => deleteCard(v) : undefined}
                                                             >
                                                                 <div>{v === "cha" && <GiCardExchange className="icon-div" />}</div>
-                                                                <div>{v === "poi" && <GiDeathSkull className="icon-div" />}</div>
+                                                                <div>{v === "poi" && <GiPoisonBottle className="icon-div" />}</div>
                                                                 <div>{v === "mas" && <GiDualityMask className="icon-div" />}</div>
                                                                 <div>{v === "ant" && <GiHealthPotion className="icon-div" />}</div>
                                                                 <div>{v === "pur" && <GiShinyPurse className="icon-div" />}</div>

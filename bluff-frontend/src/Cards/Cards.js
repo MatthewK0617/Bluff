@@ -60,13 +60,13 @@ export default function Cards({ card, cards, setCards, code }) {
         func_helper(card, { ...card, num: num2 }); // Pass card and modified card2 to func_helper
     };
 
-    const toggleRule = (rule) => {
-        setCard2({
-            ...card2,
-            [rule]: !card2[rule]
-        });
-        func_helper(card, { ...card, [rule]: !card[rule] }); // Pass card and modified card2 to func_helper
-    };
+    // const toggleRule = (rule) => {
+    //     setCard2({
+    //         ...card2,
+    //         [rule]: !card2[rule]
+    //     });
+    //     func_helper(card, { ...card, [rule]: !card[rule] }); // Pass card and modified card2 to func_helper
+    // };
 
     return (
         <div>
