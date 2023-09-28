@@ -1,6 +1,13 @@
 const game_actions = require('./game_actions.js');
+const sql_db = require('./sql_db.js');
 
-
+/**
+ * Primary function for handling game actions
+ * @param {*} io 
+ * @param {int} code game identifier
+ * @param {Object} action action taken 
+ * @returns 
+ */
 function handler(io, code, action) {
     return new Promise((resolve, reject) => {
         if (action.card === "def") {
@@ -23,8 +30,8 @@ function handler(io, code, action) {
                 });
             }
         }
-        else if (action.card === "amb") { }
-        else if (action.card === "ass") {
+        else if (action.card === "cha") { }
+        else if (action.card === "poi") {
             // attacker loses coins for this
             game_actions.coin_transactions(code, action.id, -1, 3, (err, res) => {
                 if (err) console.log(err);
@@ -34,7 +41,7 @@ function handler(io, code, action) {
             });
             // if defender allows, they lose a card
         }
-        else if (action.card === "cap") {
+        else if (action.card === "mas") {
             if (action.rule === 1) {
                 game_actions.coin_transactions(code, action.defenderId, action.id, 2, (err, res) => {
                     if (err) console.log(err);
@@ -52,10 +59,10 @@ function handler(io, code, action) {
                 })
             }
         }
-        else if (action.card === "con") {
+        else if (action.card === "ant") {
             console.log(action);
         }
-        else if (action.card === "duk") {
+        else if (action.card === "pur") {
             if (action.rule === 1) {
                 console.log(action.defenderId);
                 game_actions.coin_transactions(code, action.defenderId, action.id, 3, (err, res) => {
@@ -81,7 +88,7 @@ function handler(io, code, action) {
 
 async function bs(io, code, action) {
     game = "gd" + code;
-    let cards = await game_actions.get_player_cards(game, action.id);
+    let cards = await sql_db.getPlayerCards(game, action.id);
     let action2 = { ...action };
     action2.id = action.defenderId;
     action2.defenderId = action.id;

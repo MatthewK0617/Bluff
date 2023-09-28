@@ -74,7 +74,7 @@ function getPlayersInGame(req, res) {
                 c2: row.card_2,
                 turnOrder: row.turnOrder,
             }));
-            console.log("g1");
+            // console.log("g1");
             res.send(players);
         }
     });

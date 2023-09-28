@@ -289,29 +289,29 @@ async function delete_card(code, id, card, callback) {
  */
 
 /**
- * ambassador: 
+ * change attributes
  * r1: get 2 cards, and return any 2 cards
  * r2: block 2 coin gain
  */
 
 /**
- * assassin
+ * poison
  * r1: 3 coins to kill someone
  */
 
 /**
- * captain
+ * mask
  * r1: take at most 2 coins from another player
  * r2: block steal
  */
 
 /**
- * contessa
+ * antidote
  * r1: block an assassins kill
  */
 
 /**
- * duke
+ * purse
  * r1: take 3 coins 
  */
 

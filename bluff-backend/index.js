@@ -32,12 +32,11 @@ const corsOptions = {
 app.use(express.json()); // enable json parsing
 app.use(express.urlencoded({ extended: true })); // enable URL-encoded data parsing
 app.use(cors(corsOptions));
-// app.use(express.static('/public'));
+app.use(express.static('/public'));
 
 const io = require('socket.io')(http, {
     cors: corsOptions,
 });
-
 
 /** handle socket.io connection */
 io.on("connection", (socket) => {
@@ -87,9 +86,10 @@ io.on("connection", (socket) => {
         if (v === "allow") { // counter is allowed
             // if original_action p1 and p2 are in the same order, then do the action 
             // order is reversed because of handling
-            if (original_action.id !== action.id || action.rule === 1) await game_actions_handler.handler(io, code, action);
+            if ((original_action.id !== action.id || action.card === "def" && action.rule === 2)
+                || action.rule === 1) await game_actions_handler.handler(io, code, action);
 
-            if (action.card !== "ass") { // action is not assassinate
+            if (action.card !== "poi") { // action is not assassinate
                 io.of('/').to(code).emit("end_counters");
                 console.log('end_counters emitted');
                 let next_turn = await game_actions.update_game_turn(code, player_count);
@@ -232,6 +232,14 @@ app.post("/leaveInGame", (req, res) => {
 /* listener check */
 http.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
+});
+
+app.use((req, res, next) => {
+    // Set the Content-Type header to indicate CSS
+    res.setHeader('Content-Type', 'text/css');
+
+    // Send the blank CSS content
+    res.send(__dirname + "/blank.html");
 });
 
 /** Database clean-up */
